@@ -10,6 +10,11 @@
 
   <change-notes><![CDATA[
     <ul>
+      <li>v1.1.2 - Copy Sourcegraph link to clipboard.
+        <ul>
+          <li>Added support for copying a Sourcegraph link to clipboard.</li>
+        </ul>
+      </li>
       <li>v1.1.1 - Fixed search shortcut.
         <ul>
           <li>Updated the search URL to reflect a recent Sourcegraph.com change.</li>
@@ -48,6 +53,10 @@
     <action id="sourcegraph.search" class="Search" text="Sourcegraph: Search" description="Search selection on Sourcegraph">
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
       <keyboard-shortcut first-keystroke="alt s" keymap="$default"/>
+    </action>
+    <action id="sourcegraph.copy" class="Copy" text="Sourcegraph: Copy link to clipboard" description="Copy Sourcegraph link to clipboard">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+      <keyboard-shortcut first-keystroke="alt c" keymap="$default"/>
     </action>
   </actions>
 

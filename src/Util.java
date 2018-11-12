@@ -1,13 +1,12 @@
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.VisualPosition;
-import org.jetbrains.annotations.NotNull;
-import sun.plugin.dom.exception.InvalidStateException;
-import com.intellij.openapi.editor.LogicalPosition;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.vfs.VirtualFile;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Properties;
+import java.util.Optional;
 
 public class Util {
     public static String VERSION = "v1.1.1";
@@ -46,6 +45,12 @@ public class Util {
     // all other cases (e.g. detached HEAD state), it returns "HEAD".
     public static String gitBranch(String repoDir) throws IOException {
         return exec("git rev-parse --abbrev-ref HEAD", repoDir).trim();
+    }
+
+    // gitBranch returns either the current branch name of the repository OR in
+    // all other cases (e.g. detached HEAD state), it returns "HEAD".
+    public static String gitRevision(String repoDir) throws IOException {
+        return exec("git rev-parse HEAD", repoDir).trim();
     }
 
     // readProps tries to read the $HOME/sourcegraph-jetbrains.properties file.
@@ -87,6 +92,7 @@ public class Util {
         String fileRel = "";
         String remoteURL = "";
         String branch = "";
+        String revision = "";
         try{
             // Determine repository root directory.
             String fileDir = fileName.substring(0, fileName.lastIndexOf("/"));
@@ -96,11 +102,26 @@ public class Util {
             fileRel = fileName.substring(repoRoot.length()+1);
             remoteURL = gitDefaultRemoteURL(repoRoot);
             branch = gitBranch(repoRoot);
+            revision = gitRevision(repoRoot);
         } catch (Exception err) {
             Logger.getInstance(Util.class).info(err);
             err.printStackTrace();
         }
-        return new RepoInfo(fileRel, remoteURL, branch);
+        return new RepoInfo(fileRel, remoteURL, branch, revision);
+    }
+
+    public static Optional<RepoInfo> repoInfo(Editor editor) {
+        Document currentDoc = editor.getDocument();
+        if (currentDoc == null) {
+            return Optional.empty();
+        }
+        VirtualFile currentFile = FileDocumentManager.getInstance().getFile(currentDoc);
+        if (currentFile == null) {
+            return Optional.empty();
+        }
+        // Get repo information.
+        RepoInfo repoInfo = Util.repoInfo(currentFile.getPath());
+        return Optional.of(repoInfo);
     }
 
     // exec executes the given command in the specified directory and returns

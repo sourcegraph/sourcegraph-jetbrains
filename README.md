@@ -31,10 +31,11 @@ Right click any code or selection and choose `Sourcegraph: Open` or `Sourcegraph
 
 Keyboard Shortcuts:
 
-| Description                     | Mac                 | Linux / Windows  |
-|---------------------------------|---------------------|------------------|
-| Open file in Sourcegraph        | <kbd>Option+A</kbd> | <kbd>Alt+A</kbd> |
-| Search selection in Sourcegraph | <kbd>Option+S</kbd> | <kbd>Alt+S</kbd> |
+| Description                        | Mac                 | Linux / Windows  |
+|------------------------------------|---------------------|------------------|
+| Open file in Sourcegraph           | <kbd>Option+A</kbd> | <kbd>Alt+A</kbd> |
+| Search selection in Sourcegraph    | <kbd>Option+S</kbd> | <kbd>Alt+S</kbd> |
+| Copy Sourcegraph link to clipboard | <kbd>Option+C</kbd> | <kbd>Alt+C</kbd> |
 
 
 ## Settings
@@ -73,6 +74,7 @@ Please file an issue: https://github.com/sourcegraph/sourcegraph-jetbrains/issue
 
 ## Version History
 
+- v1.1.2 - Added support for copying a Sourcegraph link to clipboard.
 - v1.1.1 - Fixed search shortcut; Updated the search URL to reflect a recent Sourcegraph.com change.
 - v1.1.0 - Added support for using the plugin with on-premises Sourcegraph instances.
 - v1.0.0 - Initial Release; basic Open File & Search functionality.
