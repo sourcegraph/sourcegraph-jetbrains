@@ -74,6 +74,14 @@ Please file an issue: https://github.com/sourcegraph/sourcegraph-jetbrains/issue
 
 ## Version History
 
+#### v1.2
+
+- Disable search menu entry when no text is selected.
+- Fix handling of local branch
+- Move menu entries into sub-menu
+- Implement copy link functionality
+- Use Project storage API to load config from
+
 #### v1.1.2
 
 - Fixed an error that occurred when trying to search with no selection.
