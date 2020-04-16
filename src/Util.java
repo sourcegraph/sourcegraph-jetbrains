@@ -5,7 +5,7 @@ import java.io.*;
 import java.util.Properties;
 
 public class Util {
-    public static String VERSION = "v1.2";
+    public static String VERSION = "v1.2.0";
 
     // gitRemoteURL returns the remote URL for the given remote name.
     // e.g. "origin" -> "git@github.com:foo/bar"
