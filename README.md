@@ -69,7 +69,8 @@ Please file an issue: https://github.com/sourcegraph/sourcegraph-jetbrains/issue
   3. Update `README.md` (copy changelog from plugin.xml).
   5. choose `Build` -> `Prepare Plugin Module 'sourcegraph' For Deployment`
   6. `git commit -m "all: release v<THE VERSION>"` and `git push` and `git tag v<THE VERSION>` and `git push --tags`
-  7. Publish according to http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/publishing_plugin.html (note: it takes ~2 business days for JetBrains support team to review the plugin).
+  7. Upload the jar to the releases tab of this repository.
+  8. Publish according to http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/publishing_plugin.html (note: it takes ~2 business days for JetBrains support team to review the plugin).
 
 
 ## Version History
