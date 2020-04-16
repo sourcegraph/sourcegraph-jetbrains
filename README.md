@@ -74,13 +74,15 @@ Please file an issue: https://github.com/sourcegraph/sourcegraph-jetbrains/issue
 
 ## Version History
 
-#### v1.2
+#### v1.2.0
 
-- Disable search menu entry when no text is selected.
-- Fix handling of local branch
-- Move menu entries into sub-menu
-- Implement copy link functionality
-- Use Project storage API to load config from
+- The search menu entry is now no longer present when no text has been selected.
+- When on a branch that does not exist remotely, `master` will now be used instead.
+- Menu entries (Open file, etc.) are now under a Sourcegraph sub-menu.
+- Added a "Copy link to file" action.
+- The Project storage API is now used for loading configuration.
+
+(special thanks to @oliviernotteghem for this release)
 
 #### v1.1.2
 

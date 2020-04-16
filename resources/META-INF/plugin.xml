@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.sourcegraph.jetbrains</id>
   <name>Sourcegraph</name>
-  <version>1.1.2</version>
+  <version>1.2.0</version>
   <vendor email="hi@sourcegraph.com" url="https://sourcegraph.com">Sourcegraph</vendor>
 
   <description><![CDATA[
@@ -10,11 +10,18 @@
 
   <change-notes><![CDATA[
     <ul>
-    <li>v1.1.2 - Minor bug fixes around searching.
+      <li>v1.2.0 - Copy link to file, improved configuration, and bug fixes
+       <ul>
+          <li>The search menu entry is now no longer present when no text has been selected.</li>
+          <li>When on a branch that does not exist remotely, `master` will now be used instead.</li>
+          <li>Menu entries (Open file, etc.) are now under a Sourcegraph sub-menu.</li>
+          <li>Added a "Copy link to file" action.</li>
+          <li>The Project storage API is now used for loading configuration.</li>
+        </ul>
+      </li>
+      <li>v1.1.2 - Minor bug fixes around searching.
         <ul>
           <li>Fixed an error that occurred when trying to search with no selection.</li>
-        </ul>
-        <ul>
           <li>The git remote used for repository detection is now `sourcegraph` and then `origin`, instead of the previously poor choice of just the first git remote.</li>
         </ul>
       </li>
