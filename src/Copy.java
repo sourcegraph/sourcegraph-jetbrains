@@ -13,7 +13,7 @@ public class Copy extends FileAction {
         CopyPasteManager.getInstance().setContents(new StringSelection(uri));
 
         // Display bubble
-        Notification notification = new Notification("SourceGraph", "SourceGraph",
+        Notification notification = new Notification("Sourcegraph", "Sourcegraph",
                 "File url has been copied to clipboard.", NotificationType.INFORMATION);
         Notifications.Bus.notify(notification);
     }

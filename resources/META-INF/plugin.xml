@@ -65,7 +65,7 @@
     <action id="sourcegraph.copy" class="Copy" text="Copy link to file" description="Copy link to Sourcegraph">
       <keyboard-shortcut first-keystroke="alt c" keymap="$default"/>
     </action>
-    <group id="SourceGraphEditor" icon="/icons/icon.png" popup="true" text="Sourcegraph">
+    <group id="SourcegraphEditor" icon="/icons/icon.png" popup="true" text="Sourcegraph">
       <reference ref="sourcegraph.search"/>
       <reference ref="sourcegraph.open"/>
       <reference ref="sourcegraph.copy"/>
