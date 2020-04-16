@@ -99,7 +99,7 @@ public class Util {
             remoteURL = configuredGitRemoteURL(repoRoot);
             branch = gitBranch(repoRoot);
 
-            // If user is on a local, use "master" instead
+            // If on a branch that does not exist on the remote, use "master" instead.
             if (!isRemoteBranch(branch, repoRoot)) {
                 branch = "master";
             }
