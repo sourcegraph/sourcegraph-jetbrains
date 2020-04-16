@@ -14,7 +14,7 @@ public class Copy extends FileAction {
 
         // Display bubble
         Notification notification = new Notification("Sourcegraph", "Sourcegraph",
-                "File url has been copied to clipboard.", NotificationType.INFORMATION);
+                "File URL copied to clipboard.", NotificationType.INFORMATION);
         Notifications.Bus.notify(notification);
     }
 }
