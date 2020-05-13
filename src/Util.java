@@ -59,7 +59,6 @@ public class Util {
     }
 
     // readProps tries to read the $HOME/sourcegraph-jetbrains.properties file.
-    @Deprecated
     private static Properties readProps() {
         Properties props = new Properties();
         InputStream input = null;
