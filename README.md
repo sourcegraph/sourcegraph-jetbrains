@@ -80,7 +80,8 @@ Please file an issue: https://github.com/sourcegraph/sourcegraph-jetbrains/issue
 - The search menu entry is now no longer present when no text has been selected.
 - When on a branch that does not exist remotely, `master` will now be used instead.
 - Menu entries (Open file, etc.) are now under a Sourcegraph sub-menu.
-- Added a "Copy link to file" action.
+- Added a "Copy link to file" action (alt+c / opt+c).
+- Added a "Search in repository" action  (alt+r / opt+r).
 - The Project storage API is now used for loading configuration.
 
 (special thanks to @oliviernotteghem for this release)
