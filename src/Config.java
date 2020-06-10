@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
   storages = {@Storage("sourcegraph.xml")})
 class Config implements PersistentStateComponent<Config> {
 
-    String url;
+    public String url;
 
     public String getUrl() {
         return url;
