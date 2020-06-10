@@ -6,6 +6,11 @@
 
   <description><![CDATA[
       Sourcegraph for JetBrains IDEs (IntelliJ, PyCharm, GoLand, etc.)<br>
+      <ul>
+        <li>Search snippets of code on Sourcegraph.</li>
+        <li>Copy and share a link to code on Sourcegraph.</li>
+        <li>Quickly go from files in your editor to Sourcegraph.</li>
+      </ul>
     ]]></description>
 
   <change-notes><![CDATA[

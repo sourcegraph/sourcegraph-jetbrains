@@ -1,6 +1,10 @@
 # Sourcegraph for JetBrains IDEs [![JetBrains Plugin](https://img.shields.io/badge/JetBrains-Sourcegraph-green.svg)](https://plugins.jetbrains.com/plugin/9682-sourcegraph)
 
-The Sourcegraph plugin for JetBrains IDEs enables you to quickly open and search code on Sourcegraph easily and efficiently in JetBrains IDEs such as IntelliJ. This plugin works with most JetBrains IDEs:
+- Search snippets of code on Sourcegraph.
+- Copy and share a link to code on Sourcegraph.
+- Quickly go from files in your editor to Sourcegraph.
+
+The plugin works with all JetBrains IDEs including:
 
 - IntelliJ IDEA
 - IntelliJ IDEA Community Edition
@@ -22,19 +26,9 @@ The Sourcegraph plugin for JetBrains IDEs enables you to quickly open and search
 - Click `Plugins` in the left-hand pane.
 - Choose `Browse repositories...`
 - Search for `Sourcegraph` -> `Install`
+- Restart your IDE if needed, then select some code and choose `Sourcegraph` in the right-click context menu to see actions and keyboard shortcuts.
 
-## Usage
-
-Right click any code or selection and choose `Sourcegraph: Open` or `Sourcegraph: Search`.
-
-Keyboard Shortcuts:
-
-| Description                     | Mac                 | Linux / Windows  |
-| ------------------------------- | ------------------- | ---------------- |
-| Open file in Sourcegraph        | <kbd>Option+A</kbd> | <kbd>Alt+A</kbd> |
-| Search selection in Sourcegraph | <kbd>Option+S</kbd> | <kbd>Alt+S</kbd> |
-
-## Settings
+## Configuring for use with a private Sourcegraph instance
 
 The plugin is configurable _globally_ by creating a `sourcegraph-jetbrains.properties` in your home directory. For example, modify the following URL to match your on-premises Sourcegraph instance URL:
 
