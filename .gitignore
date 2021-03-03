@@ -2,6 +2,7 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 *.jar
+!gradle-wrapper.jar
 
 # User local IDEA configuration files
 .idea/
