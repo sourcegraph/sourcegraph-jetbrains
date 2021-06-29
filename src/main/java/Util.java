@@ -58,6 +58,11 @@ public class Util {
         return url.endsWith("/") ? url : url + "/";
     }
 
+    // get defaultBranch configuration option
+    public static String defaultBranch(Project project) {
+        return Config.getInstance(project).getDefaultBranch();
+    }
+
     // readProps tries to read the $HOME/sourcegraph-jetbrains.properties file.
     private static Properties readProps() {
         Properties props = new Properties();
