@@ -53,8 +53,8 @@ public abstract class SearchActionBase extends AnAction {
         String productVersion = ApplicationInfo.getInstance().getFullVersion();
         String branch = repoInfo.branch;
 
-        // set default branch if available
-        if(Util.defaultBranch(project).length()>0) {
+        // set defaultBranch only if not config is not null
+        if(Util.defaultBranch(project)!=null) {
             branch = Util.defaultBranch(project);
         };
 
