@@ -57,8 +57,8 @@ public abstract class FileAction extends AnAction {
         String branch = repoInfo.branch;
 
         // set defaultBranch only if not config is not null
-        if(Util.defaultBranch(project)!=null) {
-            branch = Util.defaultBranch(project);
+        if(Util.setDefaultBranch(project)!=null) {
+            branch = Util.setDefaultBranch(project);
         };
 
         try {
