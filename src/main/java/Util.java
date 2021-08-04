@@ -2,7 +2,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 
 import java.io.*;
-import java.util.*;
+import java.util.Properties;
 
 public class Util {
     public static String VERSION = "v1.2.1";
