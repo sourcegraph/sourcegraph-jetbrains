@@ -51,12 +51,19 @@ public abstract class SearchActionBase extends AnAction {
         String uri;
         String productName = ApplicationInfo.getInstance().getVersionName();
         String productVersion = ApplicationInfo.getInstance().getFullVersion();
-        String branch = repoInfo.branch;
+        // set defaultBranch if config option is not null
+        String branch = Util.setDefaultBranch(project)!=null ? Util.setDefaultBranch(project) : repoInfo.branch;
+        String remoteURL = repoInfo.remoteURL;
 
-        // set defaultBranch only if not config is not null
-        if(Util.setDefaultBranch(project)!=null) {
-            branch = Util.setDefaultBranch(project);
-        };
+        // replace remoteURL if config option is not null
+        if(Util.setRemoteUrlReplacements(project)!=null) {
+            String r = Util.setRemoteUrlReplacements(project);
+            String[] replacements = r.trim().split("\\s*,\\s*");
+            // Check if the entered values are pair
+            if(replacements.length==2) {
+                remoteURL = remoteURL.replace(replacements[0], replacements[1]);
+            }
+        }
 
         try {
             uri = Util.sourcegraphURL(project)+"-/editor"
@@ -67,7 +74,7 @@ public abstract class SearchActionBase extends AnAction {
                     + "&search=" + URLEncoder.encode(q, "UTF-8");
 
             if (mode == "search.repository") {
-                uri += "&search_remote_url=" + URLEncoder.encode(repoInfo.remoteURL, "UTF-8")
+                uri += "&search_remote_url=" + URLEncoder.encode(remoteURL, "UTF-8")
                         + "&search_branch=" + URLEncoder.encode(branch, "UTF-8");
             }
 

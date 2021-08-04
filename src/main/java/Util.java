@@ -2,7 +2,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 
 import java.io.*;
-import java.util.Properties;
+import java.util.*;
 
 public class Util {
     public static String VERSION = "v1.2.1";
@@ -66,6 +66,16 @@ public class Util {
             defaultBranch = props.getProperty("defaultBranch", null);
         }
         return defaultBranch;
+    }
+
+    // get remoteUrlReplacements configuration option
+    public static String setRemoteUrlReplacements(Project project) {
+        String replacements = Config.getInstance(project).getRemoteUrlReplacements();
+        if (replacements == null || replacements.length() == 0) {
+            Properties props = readProps();
+            replacements = props.getProperty("remoteUrlReplacements", null);
+        }
+        return replacements;
     }
 
     // readProps tries to read the $HOME/sourcegraph-jetbrains.properties file.
