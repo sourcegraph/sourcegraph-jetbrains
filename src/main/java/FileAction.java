@@ -65,12 +65,8 @@ public abstract class FileAction extends AnAction {
             String r = Util.setRemoteUrlReplacements(project);
             String[] replacements = r.trim().split("\\s*,\\s*");
             // Check if the entered values are pairs with no more than 2 pairs
-            Integer i = 0;
-            if(replacements.length%2==0 && replacements.length<=4) {
-                while(i< replacements.length) {
-                    remoteURL = remoteURL.replace(replacements[i], replacements[i+1]);
-                    i+=2;
-                }
+             for (int i = 0; i < replacements.length && replacements.length % 2 == 0; i += 2) {
+                remoteURL = remoteURL.replace(replacements[i], replacements[i+1]);
             }
         }
 
