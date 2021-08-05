@@ -35,7 +35,6 @@ The plugin is configurable _globally_ by creating a `sourcegraph-jetbrains.prope
 ```
 url = https://sourcegraph.example.com
 defaultBranch = example-branch
-# At least two values are required for remoteUrlReplacements to work, with four as the maximum.
 remoteUrlReplacements = git.example.com, git-web.example.com
 ```
 

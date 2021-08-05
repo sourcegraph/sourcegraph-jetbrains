@@ -129,7 +129,7 @@ public class Util {
 
             if(r!=null) {
                 String[] replacements = r.trim().split("\\s*,\\s*");
-                // Check if the entered values are pairs with no more than 2 pairs
+                // Check if the entered values are pairs
                 for (int i = 0; i < replacements.length && replacements.length % 2 == 0; i += 2) {
                     remoteURL = remoteURL.replace(replacements[i], replacements[i+1]);
                 }
@@ -151,7 +151,7 @@ public class Util {
         BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
         BufferedReader stderr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
-        // Log any stderr ouput.
+        // Log any stderr output.
         Logger logger = Logger.getInstance(Util.class);
         String s;
         while ((s = stderr.readLine()) != null) {
