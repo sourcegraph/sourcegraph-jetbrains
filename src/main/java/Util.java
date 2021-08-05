@@ -104,7 +104,7 @@ public class Util {
     // repoInfo returns the Sourcegraph repository URI, and the file path
     // relative to the repository root. If the repository URI cannot be
     // determined, a RepoInfo with empty strings is returned.
-    public static RepoInfo repoInfo(String fileName) {
+    public static RepoInfo repoInfo(String fileName, Project project) {
         String fileRel = "";
         String remoteURL = "";
         String branch = "";
@@ -116,11 +116,23 @@ public class Util {
             // Determine file path, relative to repository root.
             fileRel = fileName.substring(repoRoot.length()+1);
             remoteURL = configuredGitRemoteURL(repoRoot);
-            branch = gitBranch(repoRoot);
+            branch = Util.setDefaultBranch(project)!=null ? Util.setDefaultBranch(project) : gitBranch(repoRoot);
 
-            // If on a branch that does not exist on the remote, use "master" instead.
+            // If on a branch that does not exist on the remote or if defaultBranch does not exist on the remote,
+            // use "master" instead.
             if (!isRemoteBranch(branch, repoRoot)) {
                 branch = "master";
+            }
+
+            // replace remoteURL if config option is not null
+            String r = Util.setRemoteUrlReplacements(project);
+
+            if(r!=null) {
+                String[] replacements = r.trim().split("\\s*,\\s*");
+                // Check if the entered values are pairs with no more than 2 pairs
+                for (int i = 0; i < replacements.length && replacements.length % 2 == 0; i += 2) {
+                    remoteURL = remoteURL.replace(replacements[i], replacements[i+1]);
+                }
             }
         } catch (Exception err) {
             Logger.getInstance(Util.class).info(err);

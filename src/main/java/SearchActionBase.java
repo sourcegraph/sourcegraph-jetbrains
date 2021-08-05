@@ -40,7 +40,7 @@ public abstract class SearchActionBase extends AnAction {
         SelectionModel sel = editor.getSelectionModel();
 
         // Get repo information.
-        RepoInfo repoInfo = Util.repoInfo(currentFile.getPath());
+        RepoInfo repoInfo = Util.repoInfo(currentFile.getPath(), project);
 
         String q = sel.getSelectedText();
         if (q == null || q.equals("")) {
@@ -51,23 +51,6 @@ public abstract class SearchActionBase extends AnAction {
         String uri;
         String productName = ApplicationInfo.getInstance().getVersionName();
         String productVersion = ApplicationInfo.getInstance().getFullVersion();
-        // set defaultBranch if config option is not null
-        String branch = Util.setDefaultBranch(project)!=null ? Util.setDefaultBranch(project) : repoInfo.branch;
-        String remoteURL = repoInfo.remoteURL;
-
-        // replace remoteURL if config option is not null
-        if(Util.setRemoteUrlReplacements(project)!=null) {
-            String r = Util.setRemoteUrlReplacements(project);
-            String[] replacements = r.trim().split("\\s*,\\s*");
-            // Check if the entered values are pairs with no more than 2 pairs
-            Integer i = 0;
-            if(replacements.length%2==0 && replacements.length<=4) {
-                while(i< replacements.length) {
-                    remoteURL = remoteURL.replace(replacements[i], replacements[i+1]);
-                    i+=2;
-                }
-            }
-        }
 
         try {
             uri = Util.sourcegraphURL(project)+"-/editor"
@@ -78,8 +61,8 @@ public abstract class SearchActionBase extends AnAction {
                     + "&search=" + URLEncoder.encode(q, "UTF-8");
 
             if (mode == "search.repository") {
-                uri += "&search_remote_url=" + URLEncoder.encode(remoteURL, "UTF-8")
-                        + "&search_branch=" + URLEncoder.encode(branch, "UTF-8");
+                uri += "&search_remote_url=" + URLEncoder.encode(repoInfo.remoteURL, "UTF-8")
+                        + "&search_branch=" + URLEncoder.encode(repoInfo.branch, "UTF-8");
             }
 
         } catch (UnsupportedEncodingException err) {
