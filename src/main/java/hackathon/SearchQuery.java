@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.*;
 
 public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Data, SearchQuery.Variables> {
-  public static final String OPERATION_ID = "6c65d159f0452b6f0568da5c418aec4b76a5cc71e7367a69ad372fc42c393718";
+  public static final String OPERATION_ID = "c646981209ba8a576abdd01905efe389e2ae916a9ff1f81e9e54beb73af91f58";
 
   public static final String QUERY_DOCUMENT = QueryDocumentMinifier.minify(
     "query Search($query: String!) {\n"
@@ -58,6 +58,7 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
         + "            __typename\n"
         + "            offsetAndLengths\n"
         + "            preview\n"
+        + "            lineNumber\n"
         + "          }\n"
         + "          symbols {\n"
         + "            __typename\n"
@@ -1500,7 +1501,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
     static final ResponseField[] $responseFields = {
       ResponseField.forString("__typename", "__typename", null, false, Collections.<ResponseField.Condition>emptyList()),
       ResponseField.forList("offsetAndLengths", "offsetAndLengths", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forString("preview", "preview", null, false, Collections.<ResponseField.Condition>emptyList())
+      ResponseField.forString("preview", "preview", null, false, Collections.<ResponseField.Condition>emptyList()),
+      ResponseField.forInt("lineNumber", "lineNumber", null, false, Collections.<ResponseField.Condition>emptyList())
     };
 
     final @NotNull String __typename;
@@ -1509,6 +1511,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
 
     final @NotNull String preview;
 
+    final int lineNumber;
+
     private transient volatile String $toString;
 
     private transient volatile int $hashCode;
@@ -1516,10 +1520,11 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
     private transient volatile boolean $hashCodeMemoized;
 
     public LineMatch(@NotNull String __typename, @NotNull List<List<Integer>> offsetAndLengths,
-        @NotNull String preview) {
+        @NotNull String preview, int lineNumber) {
       this.__typename = Utils.checkNotNull(__typename, "__typename == null");
       this.offsetAndLengths = Utils.checkNotNull(offsetAndLengths, "offsetAndLengths == null");
       this.preview = Utils.checkNotNull(preview, "preview == null");
+      this.lineNumber = lineNumber;
     }
 
     public @NotNull String __typename() {
@@ -1538,6 +1543,14 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
      */
     public @NotNull String preview() {
       return this.preview;
+    }
+
+    /**
+     * The line number. 0-based. The first line will have lineNumber 0. Note: A
+     * UI will normally display line numbers 1-based.
+     */
+    public int lineNumber() {
+      return this.lineNumber;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -1562,6 +1575,7 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
             }
           });
           writer.writeString($responseFields[2], preview);
+          writer.writeInt($responseFields[3], lineNumber);
         }
       };
     }
@@ -1572,7 +1586,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
         $toString = "LineMatch{"
           + "__typename=" + __typename + ", "
           + "offsetAndLengths=" + offsetAndLengths + ", "
-          + "preview=" + preview
+          + "preview=" + preview + ", "
+          + "lineNumber=" + lineNumber
           + "}";
       }
       return $toString;
@@ -1587,7 +1602,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
         LineMatch that = (LineMatch) o;
         return this.__typename.equals(that.__typename)
          && this.offsetAndLengths.equals(that.offsetAndLengths)
-         && this.preview.equals(that.preview);
+         && this.preview.equals(that.preview)
+         && this.lineNumber == that.lineNumber;
       }
       return false;
     }
@@ -1602,6 +1618,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
         h ^= offsetAndLengths.hashCode();
         h *= 1000003;
         h ^= preview.hashCode();
+        h *= 1000003;
+        h ^= lineNumber;
         $hashCode = h;
         $hashCodeMemoized = true;
       }
@@ -1624,7 +1642,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
           }
         });
         final String preview = reader.readString($responseFields[2]);
-        return new LineMatch(__typename, offsetAndLengths, preview);
+        final int lineNumber = reader.readInt($responseFields[3]);
+        return new LineMatch(__typename, offsetAndLengths, preview, lineNumber);
       }
     }
   }

@@ -3,10 +3,12 @@ package hackathon;
 public class SearchResult {
     String repo;
     String file;
+    String path;
     String preview;
     String type;
     String content;
     OffsetAndLength offsetAndLength;
+    int lineNumber;
 
     public OffsetAndLength getOffsetAndLength() {
         return offsetAndLength;
@@ -56,14 +58,33 @@ public class SearchResult {
         this.type = type;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
+    public void setLineNumber(int lineNumber) {
+        this.lineNumber = lineNumber;
+    }
+
     @Override
     public String toString() {
         return "SearchResult{" +
                 "repo='" + repo + '\'' +
                 ", file='" + file + '\'' +
+                ", path='" + path + '\'' +
                 ", preview='" + preview + '\'' +
                 ", type='" + type + '\'' +
+                ", content='" + content + '\'' +
                 ", offsetAndLength=" + offsetAndLength +
+                ", lineNumber=" + lineNumber +
                 '}';
     }
 }

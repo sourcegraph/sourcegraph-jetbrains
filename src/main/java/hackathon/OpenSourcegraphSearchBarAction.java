@@ -72,7 +72,6 @@ public class OpenSourcegraphSearchBarAction extends AnAction implements DumbAwar
 
             }
         });
-//        String raw = "{\"query\":\"query Search(\\n\\t$query: String!,\\n) {\\n\\tsearch(query: $query, version: V2, patternType:literal) {\\n\\t\\tresults {\\n\\t\\t\\tlimitHit\\n\\t\\t\\tcloning { name }\\n\\t\\t\\tmissing { name }\\n\\t\\t\\ttimedout { name }\\n\\t\\t\\tmatchCount\\n\\t\\t\\tresults {\\n\\t\\t\\t\\t__typename\\n\\t\\t\\t\\t... on FileMatch {\\n\\t\\t\\t\\t\\trepository {\\n\\t\\t\\t\\t\\t\\tid\\n\\t\\t\\t\\t\\t\\tname\\n\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t\\tlineMatches {\\n\\t\\t\\t\\t\\t\\toffsetAndLengths\\n\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t\\tsymbols {\\n\\t\\t\\t\\t\\t\\tname\\n\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t}\\n\\t\\t\\t\\t... on CommitSearchResult {\\n\\t\\t\\t\\t\\tmatches {\\n\\t\\t\\t\\t\\t\\thighlights {\\n\\t\\t\\t\\t\\t\\t\\tline\\n\\t\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t\\tcommit {\\n\\t\\t\\t\\t\\t\\trepository {\\n\\t\\t\\t\\t\\t\\t\\tid\\n\\t\\t\\t\\t\\t\\t\\tname\\n\\t\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t\\t}\\n\\t\\t\\t\\t}\\n\\t\\t\\t\\t... on Repository {\\n\\t\\t\\t\\t\\tid\\n\\t\\t\\t\\t\\tname\\n\\t\\t\\t\\t}\\n\\t\\t\\t}\\n\\t\\t\\talert {\\n\\t\\t\\t\\ttitle\\n\\t\\t\\t\\tdescription\\n\\t\\t\\t}\\n\\t\\t}\\n\\t}\\n}\",\"variables\":{\"query\":\"file:spring-(\\\\w*)\\\\.properties\"},\"operationName\":\"Search\"}";
     }
 
     private List<SearchResult> parse(SearchQuery.Result result) {
@@ -91,7 +90,8 @@ public class OpenSourcegraphSearchBarAction extends AnAction implements DumbAwar
         List<SearchResult> results = new ArrayList<>();
 
         String repo = result.repository().name();
-        String file = result.file().path();
+        String file = result.file().name;
+        String path = result.file().path();
         String type = "file";
 
         for (SearchQuery.LineMatch lineMatch : result.lineMatches()) {
@@ -103,6 +103,7 @@ public class OpenSourcegraphSearchBarAction extends AnAction implements DumbAwar
             sr.preview = lineMatch.preview();
             sr.content = result.file.content;
             sr.offsetAndLength = getOffset(lineMatch);
+            sr.lineNumber = lineMatch.lineNumber();
             results.add(sr);
         }
 
