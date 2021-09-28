@@ -5,6 +5,24 @@ public class SearchResult {
     String file;
     String preview;
     String type;
+    String content;
+    OffsetAndLength offsetAndLength;
+
+    public OffsetAndLength getOffsetAndLength() {
+        return offsetAndLength;
+    }
+
+    public void setOffsetAndLength(OffsetAndLength offsetAndLength) {
+        this.offsetAndLength = offsetAndLength;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
 
     public String getRepo() {
         return repo;
@@ -45,6 +63,7 @@ public class SearchResult {
                 ", file='" + file + '\'' +
                 ", preview='" + preview + '\'' +
                 ", type='" + type + '\'' +
+                ", offsetAndLength=" + offsetAndLength +
                 '}';
     }
 }

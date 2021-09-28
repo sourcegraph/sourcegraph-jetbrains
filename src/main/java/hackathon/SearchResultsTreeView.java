@@ -4,10 +4,20 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimaps;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.AppUIExecutor;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.ui.Splitter;
 import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.ui.EditorTextField;
+import com.intellij.ui.OnePixelSplitter;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TreeSpeedSearch;
+import com.intellij.ui.components.JBPanelWithEmptyText;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.collections.ListUtils;
@@ -27,6 +37,15 @@ public class SearchResultsTreeView implements Disposable {
     private final JPanel panel;
     private final Tree tree;
     private TreeSpeedSearch treeSpeedSearch;
+    private boolean isDisposed = false;
+    private EditorFactory editorFactory;
+    private Editor editor;
+
+//    private Logger logger = new L
+
+    public boolean isDisposed() {
+        return isDisposed;
+    }
 
     public SearchResultsTreeView(List<SearchResult> results) {
         System.out.println(results.size());
@@ -40,7 +59,7 @@ public class SearchResultsTreeView implements Disposable {
         DefaultMutableTreeNode repoTypeMatch = new DefaultMutableTreeNode("Repository Match: " + byType.get("repository").size());
         root.add(repoTypeMatch);
         for (SearchResult repositoryMatch : byType.get("repository")) {
-            DefaultMutableTreeNode repo = new DefaultMutableTreeNode(repositoryMatch.getRepo());
+            SearchResultTreeNode repo = new SearchResultTreeNode(repositoryMatch.getRepo(), repositoryMatch);
             repoTypeMatch.add(repo);
         }
 
@@ -58,19 +77,83 @@ public class SearchResultsTreeView implements Disposable {
                 DefaultMutableTreeNode fileNode = new DefaultMutableTreeNode(fileKey);
                 repoNode.add(fileNode);
                 for (SearchResult child : matches) {
-                    DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child.preview);
+                    SearchResultTreeNode childNode = new SearchResultTreeNode(child.preview, child);
                     fileNode.add(childNode);
                 }
             });
 
             fileTypeMatch.add(repoNode);
         });
+
+
+
         tree = new Tree(model);
         JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(tree);
-        panel.add(scrollPane);
+//        panel.add(scrollPane);
+//        panel.add(previewPanel());
+
+        Splitter splitter = new OnePixelSplitter(false, 0.5f, 0.1f, 0.9f);
+        splitter.setFirstComponent(scrollPane);
+
+        editorFactory = EditorFactory.getInstance();
+//        Document document = editorFactory.createDocument("test 1234567");
+//        Editor editor = editorFactory.createViewer(document);
+
+        editor = editorFactory.createViewer(editorFactory.createDocument(""));
+
+        JBPanelWithEmptyText jbPanelWithEmptyText = new JBPanelWithEmptyText(new BorderLayout());
+        jbPanelWithEmptyText.add(editor.getComponent(), BorderLayout.CENTER);
+
+        splitter.setSecondComponent(jbPanelWithEmptyText);
+        panel.add(splitter);
 
         treeSpeedSearch = new TreeSpeedSearch(tree);
+
+        tree.getSelectionModel().addTreeSelectionListener(event -> {
+            SwingUtilities.invokeLater(() -> {
+                if (!isDisposed()) {
+//                    updateOnSelectionChanged();
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                    if (node instanceof SearchResultTreeNode) {
+                        System.out.println("updating editor");
+                        // do a thing here
+                        SearchResultTreeNode srn = (SearchResultTreeNode) node;
+                        AppUIExecutor.onUiThread().execute(() -> {
+                            editor = editorFromSearchResult(srn.getSearchResult());
+                            jbPanelWithEmptyText.removeAll();
+                            jbPanelWithEmptyText.add(editor.getComponent(), BorderLayout.CENTER);
+                            jbPanelWithEmptyText.revalidate();
+                        });
+                    }
+
+//                    myNeedUpdateButtons = true;
+                }
+            });
+        });
     }
+
+    private Editor editorFromSearchResult(SearchResult result) {
+        System.out.println("search result to editor");
+//        System.out.println(result);
+        Editor e =  editorFactory.createViewer(editorFactory.createDocument(result.getContent()));
+        Point point = e.logicalPositionToXY(e.offsetToLogicalPosition(result.getOffsetAndLength().getOffset()));
+        System.out.println(point);
+        e.getScrollingModel().getVisibleArea().setLocation(point);
+        return e;
+    }
+
+//    private void updateOnSelectionChanged(JPanel editorPanel) {
+//        ApplicationManager.getApplication().assertIsDispatchThread();
+//
+//    }
+
+//    private JPanel previewPanel(Editor editor) {
+//        JPanel panel = new JPanel();
+////        EditorTextField editorTextField = new EditorTextField("asdf");
+////        panel.add(editorTextField);
+//        panel.add(editor.getComponent(), BorderLayout.CENTER);
+//        return panel;
+//    }
 
     public JBPopup createPopup() {
         return JBPopupFactory.getInstance().createComponentPopupBuilder(panel, tree)
@@ -101,5 +184,6 @@ public class SearchResultsTreeView implements Disposable {
 
     @Override
     public void dispose() {
+        isDisposed = true;
     }
 }
