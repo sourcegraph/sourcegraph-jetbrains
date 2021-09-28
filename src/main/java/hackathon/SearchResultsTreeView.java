@@ -98,15 +98,11 @@ public class SearchResultsTreeView implements Disposable {
 
         tree = new Tree(model);
         JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(tree);
-//        panel.add(scrollPane);
-//        panel.add(previewPanel());
 
         Splitter splitter = new OnePixelSplitter(false, 0.5f, 0.1f, 0.9f);
         splitter.setFirstComponent(scrollPane);
 
         editorFactory = EditorFactory.getInstance();
-//        Document document = editorFactory.createDocument("test 1234567");
-//        Editor editor = editorFactory.createViewer(document);
 
         Editor defaultEditor = editorFactory.createViewer(editorFactory.createDocument(""));
 
@@ -142,9 +138,9 @@ public class SearchResultsTreeView implements Disposable {
     private void editorFromSearchResult(JPanel parent, SearchResult result) {
         System.out.println("search result to editor");
 //        System.out.println(result);
-//        VirtualFile virtualFile = new LightVirtualFile(result.getFile(), result.getContent());
+        VirtualFile virtualFile = new LightVirtualFile(result.getFile(), result.getContent());
         Document document = editorFactory.createDocument(result.getContent());
-        Editor e =  editorFactory.createEditor(document, ProjectManager.getInstance().getOpenProjects()[0], EditorKind.PREVIEW);
+        Editor e =  editorFactory.createEditor(document, ProjectManager.getInstance().getOpenProjects()[0], virtualFile, true, EditorKind.PREVIEW);
         customizeEditorSettings(e.getSettings());
         parent.add(e.getComponent(), BorderLayout.CENTER);
         parent.invalidate();
@@ -173,7 +169,7 @@ public class SearchResultsTreeView implements Disposable {
     }
 
     private void customizeEditorSettings(EditorSettings settings) {
-        settings.setLineMarkerAreaShown(true);
+        settings.setLineMarkerAreaShown(false);
         settings.setFoldingOutlineShown(false);
         settings.setAdditionalColumnsCount(0);
         settings.setAdditionalLinesCount(0);
