@@ -67,6 +67,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <projectService serviceInterface="Config" serviceImplementation="Config"/>
+      <applicationService serviceImplementation="hackathon.settings.SourcegraphLocationSettingsState"/>
   </extensions>
 
   <actions>
