@@ -1,12 +1,17 @@
 package hackathon;
 
+import com.apollographql.apollo.exception.ApolloException;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimaps;
 import com.intellij.codeInsight.highlighting.HighlightManager;
 import com.intellij.find.SearchTextArea;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.ShortcutSet;
+import com.intellij.openapi.actionSystem.Toggleable;
+import com.intellij.openapi.actionSystem.ex.ActionUtil;
 import com.intellij.openapi.application.AppUIExecutor;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColors;
@@ -14,6 +19,7 @@ import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.project.DumbAwareToggleAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.ComboBox;
@@ -35,20 +41,19 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.fest.util.Collections;
+import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.*;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SearchResultsTreeView implements Disposable {
 
@@ -61,6 +66,7 @@ public class SearchResultsTreeView implements Disposable {
     private DefaultTreeModel model;
     private final EditorFactory editorFactory;
     private SearchTextArea searchTextArea;
+    private SourcegraphSearchTextComponent sourcegraphSearchTextComponent;
     private List<SearchResult> mostRecentSearch;
     private Stack<String> queryHistory = new Stack<>();
     private ProjectManager projectManager = ProjectManager.getInstance();
@@ -69,6 +75,14 @@ public class SearchResultsTreeView implements Disposable {
     private SimpleColoredComponent pathInfoTitle;
 
     private JBPanel editorPanel;
+    private JPanel titlePanel;
+
+    private JLabel errorLabel;
+    private JLabel loadingLabel;
+
+    private AtomicBoolean caseSensitiveSelected = new AtomicBoolean(false);
+    private AtomicBoolean regexSelected = new AtomicBoolean(false);
+    private AtomicBoolean structuralSelected = new AtomicBoolean(false);
 
     private static final KeyStroke ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
     private static final KeyStroke SHIFT_ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.SHIFT_DOWN_MASK);
@@ -77,24 +91,25 @@ public class SearchResultsTreeView implements Disposable {
 
     private VirtualFile openInPreview;
 
+    private ExclusiveToggleActionGroup exclusiveToggleActionGroup;
+
     public SearchResultsTreeView(Project project) {
         this.project = project;
-        Logger focusLog = Logger.getLogger("java.awt.focus.Component");
-
-        // The logger should log all messages
-        focusLog.setLevel(Level.ALL);
-
-        // Create a new handler
-        ConsoleHandler handler = new ConsoleHandler();
-
-        // The handler must handle all messages
-        handler.setLevel(Level.ALL);
-
-        // Add the handler to the logger
-        focusLog.addHandler(handler);
+//        Logger focusLog = Logger.getLogger("java.awt.focus.Component");
+//
+//        // The logger should log all messages
+//        focusLog.setLevel(Level.ALL);
+//
+//        // Create a new handler
+//        ConsoleHandler handler = new ConsoleHandler();
+//
+//        // The handler must handle all messages
+//        handler.setLevel(Level.ALL);
+//
+//        // Add the handler to the logger
+//        focusLog.addHandler(handler);
 
         try {
-//            final BufferedImage bi = ImageIO.read(new File("icons/icon.png"));
             sourcegraphIcon = new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("/icons/icon.png")));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -111,7 +126,6 @@ public class SearchResultsTreeView implements Disposable {
 
         JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(tree);
 
-
         pathInfoTitle = new SimpleColoredComponent();
         pathInfoTitle.setBorder(JBUI.Borders.empty(3, 8, 4, 8));
 
@@ -123,37 +137,55 @@ public class SearchResultsTreeView implements Disposable {
 
         editorFactory = EditorFactory.getInstance();
 
-//        Editor defaultEditor = editorFactory.createViewer(editorFactory.createDocument(""));
-
         editorPanel = new JBPanelWithEmptyText(new BorderLayout());
-//        jbPanelWithEmptyText.add(defaultEditor.getComponent(), BorderLayout.CENTER);
         previewPanel.add(editorPanel);
 
         splitter.setSecondComponent(previewPanel);
 
         JBTextArea searchTextComponent = new JBTextArea();
+
+        String[] keywords = new String[]{"repo:", "-repo:", "rev:", "repogroup:", "file:", "-file:", "content:", "-content:", "select:repo", "select:file", "select:content", "lang:", "-lang:", "type:", "case:yes", "fork:yes", "fork:only", "archived:yes", "archived:only", "count:", "count:all", "timeout:", "patternType:literal", "patternType:regexp", "patternType:structural", "visibility:any", "visibility:public", "visibility:private", "AND", "OR", "NOT"};
+
+        TextFieldWithAutoCompletion<String> editorTextField = TextFieldWithAutoCompletion.create(project, Set.of(keywords), true, "");
+
+//        EditorTextField editorTextField = new EditorTextField("test");
+//        editorTextField.setOneLineMode(true);
+//        editorTextField.addNotify();
+//        editorTextField.getEditor().get;
+        sourcegraphSearchTextComponent = new SourcegraphSearchTextComponent(editorTextField);
+
         searchTextArea = new SearchTextArea(searchTextComponent, true);
         searchTextComponent.setRows(1);
         searchTextArea.setBorder(new CompoundBorder(JBUI.Borders.customLine(JBUI.CurrentTheme.BigPopup.searchFieldBorderColor(), 1, 0, 1, 0),
                 JBUI.Borders.empty(1, 0, 2, 0)));
 
-        AnActionButton action = AnActionButton.fromAction(new AnAction() {
-            @Override
-            public void actionPerformed(@NotNull AnActionEvent e) {
-                System.out.println("wahoo!");
-            }
-        });
+        sourcegraphSearchTextComponent.setBorder(new CompoundBorder(JBUI.Borders.customLine(JBUI.CurrentTheme.BigPopup.searchFieldBorderColor(), 1, 0, 1, 0),
+                JBUI.Borders.empty(1, 0, 2, 0)));
 
-        searchTextArea.setExtraActions(action);
+        ToggleAction[] toggleActions = new ToggleAction[]{
+                new ToggleAction("Case Sensitive", "Use case sensitive search", AllIcons.Actions.MatchCase, AllIcons.Actions.MatchCaseHovered, AllIcons.Actions.MatchCaseSelected, caseSensitiveSelected),
+                new ToggleAction("Regex Search", "Use regex search", AllIcons.Actions.Regex, AllIcons.Actions.RegexHovered, AllIcons.Actions.RegexSelected, regexSelected),
+                new ToggleAction("Structural Search", "Use structural search", AllIcons.Actions.Words, AllIcons.Actions.WordsHovered, AllIcons.Actions.WordsSelected, structuralSelected)
+        };
+        // this isn't working - the idea was to disable the other actions like a buttongroup would, but for some reason it isn't!
+//        exclusiveToggleActionGroup = new ExclusiveToggleActionGroup(List.of(toggleActions));
 
+//        searchTextArea.setExtraActions(toggleActions);
+        sourcegraphSearchTextComponent.setExtraActions(toggleActions);
+//        ButtonGroup buttonGroup = new ButtonGroup();
+//        UIUtil.findComponentsOfType(searchTextArea, ActionButton.class).forEach(b -> {
+//            System.out.println("x");
+//            buttonGroup.add(b.getRootPane().getDefaultButton());
+//        });
 
-        JPanel myTitlePanel = new JPanel(new MigLayout("flowx, ins 0, gap 0, fillx, filly"));
+        searchTextArea.setMultilineEnabled(false);
+        titlePanel = new JPanel(new MigLayout("flowx, ins 0, gap 0, fillx, filly"));
         JLabel myTitleLabel = new JBLabel("Find on Sourcegraph", UIUtil.ComponentStyle.REGULAR);
         RelativeFont.BOLD.install(myTitleLabel);
         myTitleLabel.setIcon(sourcegraphIcon);
         matchCountLabel = new JBLabel("", UIUtil.ComponentStyle.SMALL);
-        myTitlePanel.add(myTitleLabel, "gapright 4, gapleft 2");
-        myTitlePanel.add(matchCountLabel);
+        titlePanel.add(myTitleLabel, "gapright 4, gapleft 2");
+        titlePanel.add(matchCountLabel);
 
         JPanel buttonPanel = new JPanel(new BorderLayout());
         ComboBox<SourcegraphLocation> comboBox = new ComboBox<>(new SourcegraphLocation[]{new SourcegraphLocation("sourcegraph.com", "https://sourcegraph.com")});
@@ -165,7 +197,6 @@ public class SearchResultsTreeView implements Disposable {
             if (event.getStateChange() == ItemEvent.SELECTED) {
                 SourcegraphLocation location = (SourcegraphLocation) Objects.requireNonNull(comboBox.getSelectedItem());
                 sourcegraphClient = new SourcegraphClient(location);
-                System.out.println("set client to " + location.getUri());
             }
         });
 
@@ -173,8 +204,13 @@ public class SearchResultsTreeView implements Disposable {
         sourcegraphClient = new SourcegraphClient((SourcegraphLocation) Objects.requireNonNull(comboBox.getSelectedItem()));
 
         JPanel topPanel = new JPanel(new GridLayout(3, 1));
-        topPanel.add(myTitlePanel);
-        topPanel.add(searchTextArea);
+        topPanel.add(titlePanel);
+//        topPanel.add(editorTextField);
+        topPanel.add(sourcegraphSearchTextComponent);
+//        topPanel.add(searchTextArea);
+        JTextField jTextField = new JTextField();
+        jTextField.setBorder(null);
+//        topPanel.add(jTextField);
         topPanel.add(buttonPanel);
 
 
@@ -205,40 +241,23 @@ public class SearchResultsTreeView implements Disposable {
             }
         }));
 
-        JLabel errorLabel = new JLabel();
+        errorLabel = new JLabel();
         errorLabel.setText("search error");
         errorLabel.setForeground(JBColor.RED);
         RelativeFont.BOLD.install(errorLabel);
 
-        JLabel loading = new JLabel();
-        myTitlePanel.add(loading, "w 24, wmin 24, gapleft 2");
+        loadingLabel = new JLabel();
+        titlePanel.add(loadingLabel, "w 24, wmin 24, gapleft 2");
 
         ActionListener searchAction = e -> {
             System.out.println("search action");
-            AppUIExecutor.onUiThread().execute(() -> {
-                myTitlePanel.remove(errorLabel);
-                myTitlePanel.revalidate();
-                loading.setIcon(AnimatedIcon.Default.INSTANCE);
-
-                String query = searchTextArea.getTextArea().getText();
-                System.out.println(query);
-                queryHistory.push(query);
-                sourcegraphClient.searchAsync(query, r -> {
-                    handleSearch(r);
-                    loading.setIcon(null);
-                }, ex -> {
-                    System.out.println(ex);
-                    loading.setIcon(null);
-                    myTitlePanel.add(errorLabel);
-                });
-            });
+            doSearch(sourcegraphSearchTextComponent.getText());
         };
 
         ActionListener openInSplitEditorAction = e -> {
             if (openInPreview == null) {
                 return;
             }
-            System.out.println("open in split action");
             AppUIExecutor.onUiThread().execute(() -> {
                 FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, openInPreview, 0), false);
             });
@@ -246,52 +265,46 @@ public class SearchResultsTreeView implements Disposable {
 
         tree.setRootVisible(false);
 
-        searchTextArea.registerKeyboardAction(searchAction,KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+//        searchTextArea.registerKeyboardAction(searchAction,KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        sourcegraphSearchTextComponent.registerKeyboardAction(searchAction,KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         tree.registerKeyboardAction(openInSplitEditorAction, SHIFT_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-//        ActionCallback callback = IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]).requestFocus(searchTextArea, true);
-//        callback.doWhenRejected(s -> System.out.println(s));
-//        callback.waitFor(5000);
-//        System.out.println(callback);
-//        System.out.println(callback.getError());
-
-//        searchTextArea.setFocusable(true);
-        searchTextComponent.addFocusListener(new FocusListener() {
+        sourcegraphSearchTextComponent.editorTextField().addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                System.out.println("gained");
-                searchTextComponent.selectAll();
+                sourcegraphSearchTextComponent.editorTextField().selectAll();
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                System.out.println("lost");
             }
         });
-        searchTextArea.registerKeyboardAction(e -> {
-            System.out.println("clicked");
-            IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]).requestFocus(tree, true);
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        panel.setFocusTraversalPolicy(new ListFocusTraversalPolicy(List.of(searchTextComponent, tree)));
+//        panel.setFocusTraversalPolicy(new ListFocusTraversalPolicy(List.of(searchTextComponent, tree)));
+        panel.setFocusTraversalPolicy(new ListFocusTraversalPolicy(List.of(sourcegraphSearchTextComponent.editorTextField(), tree)));
         panel.setFocusCycleRoot(true);
-//
-//        ApplicationManager.getApplication().invokeLater(() -> {
-//            if (mySearchComponent.getCaret() != null) {
-//                mySearchComponent.selectAll();
-//            }
-//        });
+    }
 
-//        // WHY WONT THIS WORK??????????????????????????????????????????????????????????????
-//        IdeFocusManager focusManager = IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]);
-//        System.out.println("isenabled");
-//        System.out.println(focusManager.isFocusTransferEnabled());
-//        ActionCallback callback = focusManager.requestFocus(searchTextArea, true);
-//        callback.doWhenRejected(s -> System.out.println(s));
-//        callback.waitFor(5000);
-//        System.out.println(callback);
-//        System.out.println(callback.getError());
+    public void doSearch(String query) {
+        AppUIExecutor.onUiThread().execute(() -> {
+            titlePanel.remove(errorLabel);
+            titlePanel.revalidate();
+            loadingLabel.setIcon(AnimatedIcon.Default.INSTANCE);
 
+//            String query = searchTextArea.getTextArea().getText();
+            System.out.println(query);
+            queryHistory.push(query);
+
+            if (!regexSelected.get() && !structuralSelected.get()) {
+                sourcegraphClient.literalSearchAsync(query, caseSensitiveSelected.get(), this::onSearchSuccess, this::onSearchError);
+            } else if (regexSelected.get()) {
+                sourcegraphClient.regexSearchAsync(query, this::onSearchSuccess, this::onSearchError);
+            } else if (structuralSelected.get()) {
+                sourcegraphClient.structuralSearchAsync(query, this::onSearchSuccess, this::onSearchError);
+            } else {
+                throw new IllegalStateException("no idea how you managed this");
+            }
+        });
     }
 
     public boolean isDisposed() {
@@ -305,9 +318,12 @@ public class SearchResultsTreeView implements Disposable {
     }
 
     private void clearPreview() {
-        openInPreview = null;
-        editorPanel.removeAll();
-        pathInfoTitle.clear();
+        SwingUtilities.invokeLater(() -> {
+            openInPreview = null;
+            editorPanel.removeAll();
+            pathInfoTitle.clear();
+            editorPanel.revalidate();
+        });
     }
 
     private void handleSearch(List<SearchResult> results) {
@@ -359,14 +375,11 @@ public class SearchResultsTreeView implements Disposable {
         IdeFocusManager.getInstance(project).requestFocus(tree, true);
         tree.expandPath(tree.getPathForRow(0));
 
-//        panel.revalidate();
-//        tree.revalidate();
         model.reload();
     }
 
     private void editorFromSearchResult(SearchResult result) {
         System.out.println("search result to editor");
-//        System.out.println(result);
         VirtualFile virtualFile = new LightVirtualFile(result.getFile(), result.getContent());
         this.openInPreview = virtualFile;
         Document document = editorFactory.createDocument(result.getContent());
@@ -406,9 +419,6 @@ public class SearchResultsTreeView implements Disposable {
         e.getScrollingModel().addVisibleAreaListener(e1 -> {
             // I have no idea why, but if you don't have this listener the scrolling just doesn't work.
         });
-//        SearchTextArea searchTextArea = new SearchTextArea(searchTextComponent, );
-
-//        return e;
     }
 
     private void customizeEditorSettings(EditorSettings settings) {
@@ -420,22 +430,12 @@ public class SearchResultsTreeView implements Disposable {
         settings.setAutoCodeFoldingEnabled(false);
     }
 
-//    private void updateOnSelectionChanged(JPanel editorPanel) {
-//        ApplicationManager.getApplication().assertIsDispatchThread();
-//
-//    }
-
-//    private JPanel previewPanel(Editor editor) {
-//        JPanel panel = new JPanel();
-////        EditorTextField editorTextField = new EditorTextField("asdf");
-////        panel.add(editorTextField);
-//        panel.add(editor.getComponent(), BorderLayout.CENTER);
-//        return panel;
-//    }
 
     public JBPopup createPopup() {
-        return JBPopupFactory.getInstance().createComponentPopupBuilder(panel, searchTextArea.getTextArea())
+//        return JBPopupFactory.getInstance().createComponentPopupBuilder(panel, searchTextArea.getTextArea())
+        return JBPopupFactory.getInstance().createComponentPopupBuilder(panel, sourcegraphSearchTextComponent.editorTextField())
                 .setTitle("Sourcegraph Search Results")
+                .setCancelOnClickOutside(false)
                 .setResizable(true)
                 .setModalContext(false)
                 .setRequestFocus(true)
@@ -468,5 +468,77 @@ public class SearchResultsTreeView implements Disposable {
     public void dispose() {
         isDisposed = true;
     }
+
+    private void onSearchSuccess(List<SearchResult> r) {
+        loadingLabel.setIcon(null);
+        handleSearch(r);
+    }
+
+    private void onSearchError(ApolloException ex) {
+        System.out.println(ex);
+        loadingLabel.setIcon(null);
+        titlePanel.add(errorLabel);
+    }
+
+    private final class ToggleAction extends DumbAwareToggleAction {
+        private final AtomicBoolean state;
+
+        public ToggleAction(@Nullable @Nls(capitalization = Nls.Capitalization.Title) String text, @Nullable @Nls(capitalization = Nls.Capitalization.Sentence) String description, @Nullable Icon icon, Icon hoveredIcon, Icon selectedIcon, AtomicBoolean atomicBoolean) {
+            super(text, description, icon);
+            state = atomicBoolean;
+            getTemplatePresentation().setHoveredIcon(hoveredIcon);
+            getTemplatePresentation().setSelectedIcon(selectedIcon);
+
+            ShortcutSet mnemonicAsShortcut = ActionUtil.getMnemonicAsShortcut(this);
+            if (mnemonicAsShortcut != null) {
+                System.out.println(mnemonicAsShortcut);
+                setShortcutSet(mnemonicAsShortcut);
+                registerCustomShortcutSet(mnemonicAsShortcut, searchTextArea);
+            }
+        }
+
+        @Override
+        public boolean isSelected(@NotNull AnActionEvent e) {
+            return state.get();
+        }
+
+        @Override
+        public void setSelected(@NotNull AnActionEvent e, boolean state) {
+            this.state.set(state);
+//            if (state) {
+//                exclusiveToggleActionGroup.ensureExclusive(this, e);
+//            }
+
+            if (StringUtils.isNotEmpty(searchTextArea.getTextArea().getText())) {
+                doSearch(sourcegraphSearchTextComponent.getText());
+            }
+        }
+
+        @Override
+        public void update(@NotNull AnActionEvent e) {
+            System.out.println(state.get());
+            Toggleable.setSelected(e.getPresentation(), state.get());
+        }
+    }
+    class ExclusiveToggleActionGroup {
+        private final List<ToggleAction> actions;
+
+        ExclusiveToggleActionGroup(List<ToggleAction> actions) {
+            this.actions = actions;
+        }
+
+        public void ensureExclusive(AnAction actionToKeep, AnActionEvent event) {
+            for (ToggleAction action : actions) {
+                if (action == actionToKeep) {
+                    System.out.printf("toKeep: %s current: %s", actionToKeep, action);
+                    continue;
+                }
+                action.setSelected(event, false);
+                action.update(event);
+            }
+        }
+    }
+
 }
+
 

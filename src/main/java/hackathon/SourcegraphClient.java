@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import type.SearchPatternType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -39,6 +40,20 @@ public class SourcegraphClient {
                     .build();
         }
     }
+
+    public void literalSearchAsync(String query, boolean caseSensitive, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+        if (caseSensitive && !query.contains("case:yes")) {
+            query += " case:yes";
+        }
+        searchAsync(query, SearchPatternType.LITERAL, onSuccess, onError);
+    }
+    public void regexSearchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+        searchAsync(query, SearchPatternType.REGEXP, onSuccess, onError);
+    }
+    public void structuralSearchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+        searchAsync(query, SearchPatternType.STRUCTURAL, onSuccess, onError);
+    }
+
     public void searchAsync(String query, SearchPatternType patternType, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
         apolloClient.query(new SearchQuery(query, patternType)).enqueue(new ApolloCall.Callback<>() {
             @Override
@@ -74,6 +89,13 @@ public class SourcegraphClient {
         }
     }
 
+    private List<SearchResult> parse(SearchQuery.AsRepository result) {
+        SearchResult searchResult = new SearchResult();
+        searchResult.repo = result.name;
+        searchResult.type = "repository";
+        return Collections.singletonList(searchResult);
+    }
+
     private List<SearchResult> parse(SearchQuery.AsFileMatch result) {
         List<SearchResult> results = new ArrayList<>();
 
@@ -106,12 +128,5 @@ public class SourcegraphClient {
             return new OffsetAndLength(offset, length);
         }
         return new OffsetAndLength(0, 0);
-    }
-
-    private List<SearchResult> parse(SearchQuery.AsRepository result) {
-        SearchResult sr = new SearchResult();
-        sr.repo = result.name();
-        sr.type = "repository";
-        return Collections.singletonList(sr);
     }
 }
