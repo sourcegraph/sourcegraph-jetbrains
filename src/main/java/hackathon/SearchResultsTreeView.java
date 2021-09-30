@@ -4,10 +4,9 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimaps;
 import com.intellij.codeInsight.highlighting.HighlightManager;
 import com.intellij.find.SearchTextArea;
-import com.intellij.notification.Notification;
-import com.intellij.notification.Notifications;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.AppUIExecutor;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColors;
@@ -15,22 +14,20 @@ import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
-import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
-import com.intellij.openapi.util.ActionCallback;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.*;
 import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBPanelWithEmptyText;
-import com.intellij.ui.render.RenderingUtil;
+import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
@@ -38,25 +35,25 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.fest.util.Collections;
+import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SearchResultsTreeView implements Disposable {
+
+    private final Project project;
+
     private final JPanel panel;
     private final Tree tree;
     private boolean isDisposed = false;
@@ -68,8 +65,10 @@ public class SearchResultsTreeView implements Disposable {
     private Stack<String> queryHistory = new Stack<>();
     private ProjectManager projectManager = ProjectManager.getInstance();
     private JLabel matchCountLabel;
-    private ImageIcon loadingIcon;
+    private ImageIcon sourcegraphIcon;
     private SimpleColoredComponent pathInfoTitle;
+
+    private JBPanel editorPanel;
 
     private static final KeyStroke ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
     private static final KeyStroke SHIFT_ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.SHIFT_DOWN_MASK);
@@ -78,7 +77,8 @@ public class SearchResultsTreeView implements Disposable {
 
     private VirtualFile openInPreview;
 
-    public SearchResultsTreeView() {
+    public SearchResultsTreeView(Project project) {
+        this.project = project;
         Logger focusLog = Logger.getLogger("java.awt.focus.Component");
 
         // The logger should log all messages
@@ -95,7 +95,7 @@ public class SearchResultsTreeView implements Disposable {
 
         try {
 //            final BufferedImage bi = ImageIO.read(new File("icons/icon.png"));
-            loadingIcon = new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("/icons/icon.png")));
+            sourcegraphIcon = new ImageIcon(Objects.requireNonNull(this.getClass().getClassLoader().getResource("/icons/icon.png")));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -108,7 +108,9 @@ public class SearchResultsTreeView implements Disposable {
         model = new DefaultTreeModel(root);
 
         tree = new Tree(model);
+
         JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(tree);
+
 
         pathInfoTitle = new SimpleColoredComponent();
         pathInfoTitle.setBorder(JBUI.Borders.empty(3, 8, 4, 8));
@@ -123,24 +125,32 @@ public class SearchResultsTreeView implements Disposable {
 
 //        Editor defaultEditor = editorFactory.createViewer(editorFactory.createDocument(""));
 
-        JBPanelWithEmptyText jbPanelWithEmptyText = new JBPanelWithEmptyText(new BorderLayout());
+        editorPanel = new JBPanelWithEmptyText(new BorderLayout());
 //        jbPanelWithEmptyText.add(defaultEditor.getComponent(), BorderLayout.CENTER);
-        previewPanel.add(jbPanelWithEmptyText);
+        previewPanel.add(editorPanel);
 
         splitter.setSecondComponent(previewPanel);
 
-        JTextArea searchTextComponent = new JTextArea();
+        JBTextArea searchTextComponent = new JBTextArea();
         searchTextArea = new SearchTextArea(searchTextComponent, true);
         searchTextComponent.setRows(1);
         searchTextArea.setBorder(new CompoundBorder(JBUI.Borders.customLine(JBUI.CurrentTheme.BigPopup.searchFieldBorderColor(), 1, 0, 1, 0),
                 JBUI.Borders.empty(1, 0, 2, 0)));
 
+        AnActionButton action = AnActionButton.fromAction(new AnAction() {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                System.out.println("wahoo!");
+            }
+        });
+
+        searchTextArea.setExtraActions(action);
 
 
         JPanel myTitlePanel = new JPanel(new MigLayout("flowx, ins 0, gap 0, fillx, filly"));
         JLabel myTitleLabel = new JBLabel("Find on Sourcegraph", UIUtil.ComponentStyle.REGULAR);
         RelativeFont.BOLD.install(myTitleLabel);
-        myTitleLabel.setIcon(loadingIcon);
+        myTitleLabel.setIcon(sourcegraphIcon);
         matchCountLabel = new JBLabel("", UIUtil.ComponentStyle.SMALL);
         myTitlePanel.add(myTitleLabel, "gapright 4, gapleft 2");
         myTitlePanel.add(matchCountLabel);
@@ -188,8 +198,8 @@ public class SearchResultsTreeView implements Disposable {
                         if (StringUtils.isNotEmpty(srn.getSearchResult().getPath())) {
                             pathInfoTitle.append(srn.getSearchResult().getPath(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
                         }
-                        jbPanelWithEmptyText.removeAll();
-                        editorFromSearchResult(jbPanelWithEmptyText, srn.getSearchResult());
+                        editorPanel.removeAll();
+                        editorFromSearchResult(srn.getSearchResult());
                     });
                 }
             }
@@ -201,19 +211,15 @@ public class SearchResultsTreeView implements Disposable {
         RelativeFont.BOLD.install(errorLabel);
 
         JLabel loading = new JLabel();
-//        loading.setIcon(loadingIcon);
-        myTitlePanel.add(loading, "w 24, wmin 24");
+        myTitlePanel.add(loading, "w 24, wmin 24, gapleft 2");
 
         ActionListener searchAction = e -> {
             System.out.println("search action");
             AppUIExecutor.onUiThread().execute(() -> {
-//                myTitlePanel.add(loading);
-//                loading.setIcon(loadingIcon);
                 myTitlePanel.remove(errorLabel);
                 myTitlePanel.revalidate();
                 loading.setIcon(AnimatedIcon.Default.INSTANCE);
 
-//                loading.setText("loading...");
                 String query = searchTextArea.getTextArea().getText();
                 System.out.println(query);
                 queryHistory.push(query);
@@ -225,8 +231,6 @@ public class SearchResultsTreeView implements Disposable {
                     loading.setIcon(null);
                     myTitlePanel.add(errorLabel);
                 });
-//                myTitlePanel.remove(loading);
-//                loading.setText(null);
             });
         };
 
@@ -236,15 +240,14 @@ public class SearchResultsTreeView implements Disposable {
             }
             System.out.println("open in split action");
             AppUIExecutor.onUiThread().execute(() -> {
-                Project project = projectManager.getOpenProjects()[0];
                 FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, openInPreview, 0), false);
             });
         };
 
         tree.setRootVisible(false);
 
-        panel.registerKeyboardAction(searchAction,KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-        panel.registerKeyboardAction(openInSplitEditorAction, SHIFT_ENTER, JComponent.WHEN_IN_FOCUSED_WINDOW);
+        searchTextArea.registerKeyboardAction(searchAction,KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        tree.registerKeyboardAction(openInSplitEditorAction, SHIFT_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
 //        ActionCallback callback = IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]).requestFocus(searchTextArea, true);
 //        callback.doWhenRejected(s -> System.out.println(s));
@@ -252,17 +255,42 @@ public class SearchResultsTreeView implements Disposable {
 //        System.out.println(callback);
 //        System.out.println(callback.getError());
 
-        searchTextArea.setFocusable(true);
+//        searchTextArea.setFocusable(true);
+        searchTextComponent.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                System.out.println("gained");
+                searchTextComponent.selectAll();
+            }
 
-        // WHY WONT THIS WORK??????????????????????????????????????????????????????????????
-        IdeFocusManager focusManager = IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]);
-        System.out.println("isenabled");
-        System.out.println(focusManager.isFocusTransferEnabled());
-        ActionCallback callback = focusManager.requestFocus(searchTextArea, true);
-        callback.doWhenRejected(s -> System.out.println(s));
-        callback.waitFor(5000);
-        System.out.println(callback);
-        System.out.println(callback.getError());
+            @Override
+            public void focusLost(FocusEvent e) {
+                System.out.println("lost");
+            }
+        });
+        searchTextArea.registerKeyboardAction(e -> {
+            System.out.println("clicked");
+            IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]).requestFocus(tree, true);
+        }, KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        panel.setFocusTraversalPolicy(new ListFocusTraversalPolicy(List.of(searchTextComponent, tree)));
+        panel.setFocusCycleRoot(true);
+//
+//        ApplicationManager.getApplication().invokeLater(() -> {
+//            if (mySearchComponent.getCaret() != null) {
+//                mySearchComponent.selectAll();
+//            }
+//        });
+
+//        // WHY WONT THIS WORK??????????????????????????????????????????????????????????????
+//        IdeFocusManager focusManager = IdeFocusManager.getInstance(projectManager.getOpenProjects()[0]);
+//        System.out.println("isenabled");
+//        System.out.println(focusManager.isFocusTransferEnabled());
+//        ActionCallback callback = focusManager.requestFocus(searchTextArea, true);
+//        callback.doWhenRejected(s -> System.out.println(s));
+//        callback.waitFor(5000);
+//        System.out.println(callback);
+//        System.out.println(callback.getError());
 
     }
 
@@ -276,13 +304,23 @@ public class SearchResultsTreeView implements Disposable {
         }
     }
 
+    private void clearPreview() {
+        openInPreview = null;
+        editorPanel.removeAll();
+        pathInfoTitle.clear();
+    }
+
     private void handleSearch(List<SearchResult> results) {
         mostRecentSearch = results;
         clearResults();
+        clearPreview();
+        matchCountLabel.setText(String.format("%d matches", results.size()));
         if (CollectionUtils.isEmpty(results)) {
+            model.reload();
+            editorPanel.revalidate();
             return;
         }
-        matchCountLabel.setText(String.format("%d matches", results.size()));
+
 
         Map<String, Collection<SearchResult>> byType = groupResultsByType(results).asMap();
 
@@ -318,13 +356,15 @@ public class SearchResultsTreeView implements Disposable {
                 root.add(repoNode);
             });
         }
+        IdeFocusManager.getInstance(project).requestFocus(tree, true);
+        tree.expandPath(tree.getPathForRow(0));
 
 //        panel.revalidate();
 //        tree.revalidate();
         model.reload();
     }
 
-    private void editorFromSearchResult(JPanel parent, SearchResult result) {
+    private void editorFromSearchResult(SearchResult result) {
         System.out.println("search result to editor");
 //        System.out.println(result);
         VirtualFile virtualFile = new LightVirtualFile(result.getFile(), result.getContent());
@@ -333,9 +373,9 @@ public class SearchResultsTreeView implements Disposable {
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
         Editor e =  editorFactory.createEditor(document, project, virtualFile, true, EditorKind.PREVIEW);
         customizeEditorSettings(e.getSettings());
-        parent.add(e.getComponent(), BorderLayout.CENTER);
-        parent.invalidate();
-        parent.validate();
+        editorPanel.add(e.getComponent(), BorderLayout.CENTER);
+        editorPanel.invalidate();
+        editorPanel.validate();
 //        LogicalPosition pos = e.offsetToLogicalPosition(result.getOffsetAndLength().getOffset());
         LogicalPosition pos = new LogicalPosition(result.lineNumber, result.offsetAndLength.getOffset());
 //        Point point = e.logicalPositionToXY(pos);
@@ -394,12 +434,12 @@ public class SearchResultsTreeView implements Disposable {
 //    }
 
     public JBPopup createPopup() {
-        return JBPopupFactory.getInstance().createComponentPopupBuilder(panel, tree)
+        return JBPopupFactory.getInstance().createComponentPopupBuilder(panel, searchTextArea.getTextArea())
                 .setTitle("Sourcegraph Search Results")
                 .setResizable(true)
                 .setModalContext(false)
-                .setFocusable(true)
                 .setRequestFocus(true)
+                .setFocusable(true)
                 .setMovable(true)
                 .setBelongsToGlobalPopupStack(true)
                 .setCancelOnOtherWindowOpen(false)
@@ -418,6 +458,10 @@ public class SearchResultsTreeView implements Disposable {
 
     private ImmutableListMultimap<String, SearchResult> groupResultsByFile(Collection<SearchResult> results) {
         return Multimaps.index(results, searchResult -> searchResult.file != null ? searchResult.file : "");
+    }
+
+    public void show() {
+
     }
 
     @Override

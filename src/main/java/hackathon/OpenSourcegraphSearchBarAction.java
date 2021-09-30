@@ -24,7 +24,7 @@ public class OpenSourcegraphSearchBarAction extends AnAction implements DumbAwar
 
         AppUIExecutor.onUiThread().execute(() -> {
             if (searchResultsTreeView == null || searchResultsTreeView.isDisposed()) {
-                searchResultsTreeView = new SearchResultsTreeView();
+                searchResultsTreeView = new SearchResultsTreeView(e.getProject());
             }
             JBPopup popup = searchResultsTreeView.createPopup();
             popup.showCenteredInCurrentWindow(ProjectManager.getInstance().getOpenProjects()[0]);

@@ -12,16 +12,17 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import type.CustomType;
+import type.SearchPatternType;
 
 import java.io.IOException;
 import java.util.*;
 
 public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Data, SearchQuery.Variables> {
-  public static final String OPERATION_ID = "c646981209ba8a576abdd01905efe389e2ae916a9ff1f81e9e54beb73af91f58";
+  public static final String OPERATION_ID = "2773c5104c0fe8a358824faec63b3365fcdff375e5d73a115624f0bb7376bb17";
 
   public static final String QUERY_DOCUMENT = QueryDocumentMinifier.minify(
-    "query Search($query: String!) {\n"
-        + "  search(query: $query, version: V2, patternType: literal) {\n"
+    "query Search($query: String!, $patternType: SearchPatternType!) {\n"
+        + "  search(query: $query, version: V2, patternType: $patternType) {\n"
         + "    __typename\n"
         + "    results {\n"
         + "      __typename\n"
@@ -84,9 +85,10 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
 
   private final Variables variables;
 
-  public SearchQuery(@NotNull String query) {
+  public SearchQuery(@NotNull String query, @NotNull SearchPatternType patternType) {
     Utils.checkNotNull(query, "query == null");
-    variables = new Variables(query);
+    Utils.checkNotNull(patternType, "patternType == null");
+    variables = new Variables(query, patternType);
   }
 
   @Override
@@ -171,6 +173,8 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
   public static final class Builder {
     private @NotNull String query;
 
+    private @NotNull SearchPatternType patternType;
+
     Builder() {
     }
 
@@ -179,24 +183,38 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
       return this;
     }
 
+    public Builder patternType(@NotNull SearchPatternType patternType) {
+      this.patternType = patternType;
+      return this;
+    }
+
     public SearchQuery build() {
       Utils.checkNotNull(query, "query == null");
-      return new SearchQuery(query);
+      Utils.checkNotNull(patternType, "patternType == null");
+      return new SearchQuery(query, patternType);
     }
   }
 
   public static final class Variables extends Operation.Variables {
     private final @NotNull String query;
 
+    private final @NotNull SearchPatternType patternType;
+
     private final transient Map<String, Object> valueMap = new LinkedHashMap<>();
 
-    Variables(@NotNull String query) {
+    Variables(@NotNull String query, @NotNull SearchPatternType patternType) {
       this.query = query;
+      this.patternType = patternType;
       this.valueMap.put("query", query);
+      this.valueMap.put("patternType", patternType);
     }
 
     public @NotNull String query() {
       return query;
+    }
+
+    public @NotNull SearchPatternType patternType() {
+      return patternType;
     }
 
     @Override
@@ -210,6 +228,7 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
         @Override
         public void marshal(InputFieldWriter writer) throws IOException {
           writer.writeString("query", query);
+          writer.writeString("patternType", patternType.rawValue());
         }
       };
     }
@@ -226,7 +245,10 @@ public final class SearchQuery implements Query<SearchQuery.Data, SearchQuery.Da
         .put("variableName", "query")
         .build())
       .put("version", "V2")
-      .put("patternType", "literal")
+      .put("patternType", new UnmodifiableMapBuilder<String, Object>(2)
+        .put("kind", "Variable")
+        .put("variableName", "patternType")
+        .build())
       .build(), true, Collections.<ResponseField.Condition>emptyList())
     };
 

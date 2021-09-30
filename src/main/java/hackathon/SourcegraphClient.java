@@ -7,6 +7,7 @@ import com.apollographql.apollo.exception.ApolloException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.jetbrains.annotations.NotNull;
+import type.SearchPatternType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class SourcegraphClient {
-    private ApolloClient apolloClient;
+    private final ApolloClient apolloClient;
 
     public SourcegraphClient(SourcegraphLocation location) {
         System.out.println(location.getUri());
@@ -38,9 +39,8 @@ public class SourcegraphClient {
                     .build();
         }
     }
-
-    public void searchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
-        apolloClient.query(new SearchQuery(query)).enqueue(new ApolloCall.Callback<>() {
+    public void searchAsync(String query, SearchPatternType patternType, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+        apolloClient.query(new SearchQuery(query, patternType)).enqueue(new ApolloCall.Callback<>() {
             @Override
             public void onResponse(@NotNull Response<SearchQuery.Data> response) {
                 List<SearchResult> results = new ArrayList<>();
@@ -49,8 +49,6 @@ public class SourcegraphClient {
                 }
 
                 onSuccess.accept(results);
-
-
             }
 
             @Override
@@ -58,6 +56,10 @@ public class SourcegraphClient {
                 onError.accept(e);
             }
         });
+    }
+
+    public void searchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+        searchAsync(query, SearchPatternType.LITERAL, onSuccess, onError);
     }
 
     private List<SearchResult> parse(SearchQuery.Result result) {
