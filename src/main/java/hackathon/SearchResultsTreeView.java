@@ -188,7 +188,7 @@ public class SearchResultsTreeView implements Disposable {
         titlePanel.add(matchCountLabel);
 
         JPanel buttonPanel = new JPanel(new BorderLayout());
-        ComboBox<SourcegraphLocation> comboBox = new ComboBox<>(new SourcegraphLocation[]{new SourcegraphLocation("sourcegraph.com", "https://sourcegraph.com")});
+        ComboBox<SourcegraphLocation> comboBox = new ComboBox<>(new SourcegraphLocation[]{new SourcegraphLocation("sourcegraph.com", "https://sourcegraph.com"), new SourcegraphLocation("k8s-dogfood", "https://k8s.sgdev.org", "18f0cb181240f2e4657e71642af6d7e0de1015ce")});
         buttonPanel.add(comboBox, BorderLayout.EAST);
         buttonPanel.setBorder(new CompoundBorder(JBUI.Borders.customLine(JBUI.CurrentTheme.BigPopup.searchFieldBorderColor(), 0, 0, 0, 0),
                 JBUI.Borders.empty(1, 0)));
@@ -286,9 +286,20 @@ public class SearchResultsTreeView implements Disposable {
     }
 
     public void doSearch(String query) {
+        if (StringUtils.isEmpty(query)) {
+            return;
+        } else if (queryHistory.size() > 0 && query.equals(queryHistory.peek())) {
+            // do nothing if the last query is the same!
+            return;
+        } else {
+            // this is a new query
+            sourcegraphSearchTextComponent.editorTextField().setText(query);
+        }
         AppUIExecutor.onUiThread().execute(() -> {
             titlePanel.remove(errorLabel);
-            titlePanel.revalidate();
+            errorLabel.setVisible(false);
+//            titlePanel.revalidate();
+//            titlePanel
             loadingLabel.setIcon(AnimatedIcon.Default.INSTANCE);
 
 //            String query = searchTextArea.getTextArea().getText();
