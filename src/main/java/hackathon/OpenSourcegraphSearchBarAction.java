@@ -7,13 +7,12 @@ import com.intellij.openapi.application.AppUIExecutor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.ui.popup.JBPopup;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class OpenSourcegraphSearchBarAction extends AnAction implements DumbAware {
 
-    private SearchResultsTreeView searchResultsTreeView;
+    private SourcegraphSearchView searchResultsTreeView;
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
@@ -25,7 +24,7 @@ public class OpenSourcegraphSearchBarAction extends AnAction implements DumbAwar
 
         AppUIExecutor.onUiThread().execute(() -> {
             if (searchResultsTreeView == null || searchResultsTreeView.isDisposed()) {
-                searchResultsTreeView = new SearchResultsTreeView(e.getProject());
+                searchResultsTreeView = new SourcegraphSearchView(e.getProject());
 //                popup = searchResultsTreeView.createPopup();
             }
             Editor editor = e.getRequiredData(CommonDataKeys.EDITOR);

@@ -1,5 +1,6 @@
 package hackathon;
 
+import com.intellij.find.editorHeaderActions.Utils;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.*;
@@ -11,9 +12,13 @@ import com.intellij.openapi.editor.ex.util.EditorUtil;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.DumbAwareAction;
+import com.intellij.openapi.ui.popup.JBPopup;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.PopupChooserBuilder;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBList;
@@ -27,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
@@ -36,6 +42,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Stack;
 
 import static com.intellij.find.SearchTextArea.JUST_CLEARED_KEY;
 import static com.intellij.find.SearchTextArea.NEW_LINE_KEYSTROKE;
@@ -44,53 +51,35 @@ import static javax.swing.BorderFactory.createEmptyBorder;
 
 public class SourcegraphSearchTextComponent extends JPanel implements PropertyChangeListener {
 
-//    private final JTextArea myTextArea;
+    //    private final JTextArea myTextArea;
     private final EditorTextField textField;
     private final JPanel myIconsPanel = new NonOpaquePanel();
     private final ActionButton myClearButton;
     private final NonOpaquePanel myExtraActionsPanel = new NonOpaquePanel();
     private final ActionButton myHistoryPopupButton;
+    private final Stack<String> queryHistory;
 
-    public SourcegraphSearchTextComponent(EditorTextField textField) {
+    public SourcegraphSearchTextComponent(EditorTextField textField, Stack<String> queryHistory) {
         this.textField = textField;
         textField.addPropertyChangeListener("background", this);
         textField.addPropertyChangeListener("font", this);
 
         textField.setBorder(createEmptyBorder());
 
-        DumbAwareAction.create(event -> textField.transferFocus())
+
+        // somehow this is the cause of the tab focus problems - without it the tab focus doesn't work. with ancestor mask it allows tab autocomplet
+        // to work, but tab focus change doesn't work. With focus selected mask it doesnt work at all.
+        DumbAwareAction.create(event -> { textField.transferFocus(); })
                 .registerCustomShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0)), textField);
         DumbAwareAction.create(event -> textField.transferFocusBackward())
                 .registerCustomShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, SHIFT_DOWN_MASK)), textField);
-        KeymapUtil.reassignAction(textField, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), NEW_LINE_KEYSTROKE, WHEN_FOCUSED);
 
-//        textField.setDocument(new PlainDocument() {
-//            @Override
-//            public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
-//                if (getProperty("filterNewlines") == Boolean.TRUE && str.indexOf('\n') >= 0) {
-//                    str = StringUtil.replace(str, "\n", " ");
-//                }
-//                if (!StringUtil.isEmpty(str)) super.insertString(offs, str, a);
-//            }
-//        });
-//        if (Registry.is("ide.find.field.trims.pasted.text", false)) {
-//            textField.getDocument().putProperty(EditorCopyPasteHelper.TRIM_TEXT_ON_PASTE_KEY, Boolean.TRUE);
-//        }
-//        textField.getDocument().addDocumentListener(new DocumentAdapter() {
-//            @Override
-//            protected void textChanged(@NotNull DocumentEvent e) {
-//                if (e.getType() == DocumentEvent.EventType.INSERT) {
-//                    textField.putClientProperty(JUST_CLEARED_KEY, null);
-//                }
-//                int rows = Math.min(Registry.get("ide.find.max.rows").asInteger(), textField.getLineCount());
-//                textField.setRows(Math.max(1, Math.min(25, rows)));
-//                updateIconsLayout();
-//            }
-//        });
         textField.setOpaque(false);
 
         myHistoryPopupButton = new MyActionButton(new ShowHistoryAction(), false);
         myClearButton = new MyActionButton(new ClearAction(), false);
+
+        this.queryHistory = queryHistory;
 
         updateLayout();
     }
@@ -103,27 +92,50 @@ public class SourcegraphSearchTextComponent extends JPanel implements PropertyCh
         return textField;
     }
 
-
-    public void updateExtraActions() {
-        for (ActionButton button : UIUtil.findComponentsOfType(myExtraActionsPanel, ActionButton.class)) {
-            button.update();
-        }
-    }
-
     private class ShowHistoryAction extends DumbAwareAction {
 
         ShowHistoryAction() {
             super("History",
-                    "Show recent Sourcegraph searches.",
+                    "Show recent Sourcegraph searches",
                     AllIcons.Actions.SearchWithHistory);
             registerCustomShortcutSet(KeymapUtil.getActiveKeymapShortcuts("ShowSearchHistory"), textField);
         }
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent e) {
-            String[] recent = {"lang:java Swing"};
-            JBList<String> historyList = new JBList<>(ArrayUtil.reverseArray(recent));
-//            Utils.showCompletionPopup(SourcegraphSearchTextComponent.this, historyList, null, textField.component, null);
+            JBList<String> historyList = new JBList<>();
+            showCompletionPopup(SourcegraphSearchTextComponent.this, historyList, null, null);
+        }
+    }
+
+    private void showCompletionPopup(JComponent toolbarComponent,
+                                     final JList list,
+                                     String title,
+                                     String ad) {
+
+        final Runnable callback = () -> {
+            String selectedValue = (String) list.getSelectedValue();
+            if (selectedValue != null) {
+                textField.setText(selectedValue);
+                IdeFocusManager.getGlobalInstance().requestFocus(textField, false);
+            }
+        };
+
+        final PopupChooserBuilder builder = JBPopupFactory.getInstance().createListPopupBuilder(list);
+        if (title != null) {
+            builder.setTitle(title);
+        }
+        final JBPopup popup = builder.setMovable(false).setResizable(false)
+                .setRequestFocus(true).setItemChoosenCallback(callback).createPopup();
+
+        if (ad != null) {
+            popup.setAdText(ad, SwingConstants.LEFT);
+        }
+
+        if (toolbarComponent != null) {
+            popup.showUnderneathOf(toolbarComponent);
+        } else {
+            popup.showUnderneathOf(textField);
         }
     }
 
@@ -140,12 +152,13 @@ public class SourcegraphSearchTextComponent extends JPanel implements PropertyCh
 
         removeAll();
         setLayout(new BorderLayout(JBUIScale.scale(3), 0));
-        setBorder(JBUI.Borders.empty(SystemInfo.isLinux ? JBUI.scale(2) : JBUI.scale(1)));
+        setBorder(JBUI.Borders.empty(SystemInfo.isLinux ? JBUI.scale(0) : JBUI.scale(0)));
         add(historyButtonWrapper, BorderLayout.WEST);
 
         System.out.println("components");
         for (Component component : textField.getComponents()) {
             System.out.println(component.getClass().getName());
+            // trying to get the border of this scrollpane to go away.... but it just..wont? Or something is resetting it?
         }
 //        myScrollPane.getViewport().setBorder(null);
 //        myScrollPane.getViewport().setOpaque(false);
@@ -179,7 +192,7 @@ public class SourcegraphSearchTextComponent extends JPanel implements PropertyCh
                 System.out.println(e.getComponent().getClass());
                 if (e.getComponent() instanceof Editor) {
                     System.out.println("editor found");
-                    ((Editor)e.getComponent()).setBorder(null);
+                    ((Editor) e.getComponent()).setBorder(null);
                 }
             }
 
@@ -235,12 +248,12 @@ public class SourcegraphSearchTextComponent extends JPanel implements PropertyCh
         updateFont();
         setBackground(UIUtil.getTextFieldBackground());
     }
+
     private void updateFont() {
         if (textField != null) {
             if (Registry.is("ide.find.use.editor.font", false)) {
                 textField.setFont(EditorUtil.getEditorFont());
-            }
-            else {
+            } else {
                 textField.setFont(UIManager.getFont("TextField.font"));
             }
         }
@@ -285,15 +298,14 @@ public class SourcegraphSearchTextComponent extends JPanel implements PropertyCh
                 Rectangle rect = new Rectangle(component.getSize());
                 JBInsets.removeFrom(rect, component.getInsets());
                 SYSTEM_LOOK.paintLookBorder(g, rect, JBUI.CurrentTheme.ActionButton.focusedBorder());
-            }
-            else {
+            } else {
                 super.paintBorder(g, component, ActionButtonComponent.NORMAL);
             }
         }
 
         @Override
         public void paintBackground(Graphics g, JComponent component, int state) {
-            if (((MyActionButton)component).isRolloverState()) {
+            if (((MyActionButton) component).isRolloverState()) {
                 super.paintBackground(g, component, state);
             }
         }

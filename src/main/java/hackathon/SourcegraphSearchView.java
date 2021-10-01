@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SearchResultsTreeView implements Disposable {
+public class SourcegraphSearchView implements Disposable {
 
     private final Project project;
 
@@ -90,10 +90,11 @@ public class SearchResultsTreeView implements Disposable {
     private SourcegraphClient sourcegraphClient;
 
     private VirtualFile openInPreview;
+    private SourcegraphClient.Search lastSuccessfulSearch;
 
     private ExclusiveToggleActionGroup exclusiveToggleActionGroup;
 
-    public SearchResultsTreeView(Project project) {
+    public SourcegraphSearchView(Project project) {
         this.project = project;
 //        Logger focusLog = Logger.getLogger("java.awt.focus.Component");
 //
@@ -152,7 +153,7 @@ public class SearchResultsTreeView implements Disposable {
 //        editorTextField.setOneLineMode(true);
 //        editorTextField.addNotify();
 //        editorTextField.getEditor().get;
-        sourcegraphSearchTextComponent = new SourcegraphSearchTextComponent(editorTextField);
+        sourcegraphSearchTextComponent = new SourcegraphSearchTextComponent(editorTextField, queryHistory);
 
         searchTextArea = new SearchTextArea(searchTextComponent, true);
         searchTextComponent.setRows(1);
@@ -304,7 +305,6 @@ public class SearchResultsTreeView implements Disposable {
 
 //            String query = searchTextArea.getTextArea().getText();
             System.out.println(query);
-            queryHistory.push(query);
 
             if (!regexSelected.get() && !structuralSelected.get()) {
                 sourcegraphClient.literalSearchAsync(query, caseSensitiveSelected.get(), this::onSearchSuccess, this::onSearchError);
@@ -337,7 +337,12 @@ public class SearchResultsTreeView implements Disposable {
         });
     }
 
-    private void handleSearch(List<SearchResult> results) {
+    private void handleSearch(SourcegraphClient.Search search) {
+        lastSuccessfulSearch = search;
+        String query = search.getQuery();
+        List<SearchResult> results = search.getResults();
+        queryHistory.push(query);
+
         mostRecentSearch = results;
         clearResults();
         clearPreview();
@@ -393,6 +398,9 @@ public class SearchResultsTreeView implements Disposable {
         System.out.println("search result to editor");
         VirtualFile virtualFile = new LightVirtualFile(result.getFile(), result.getContent());
         this.openInPreview = virtualFile;
+        if (StringUtils.isNotEmpty(result.getContent())) {
+            result.setContent(result.getContent().replaceAll("\\r\\n?", "\n"));
+        }
         Document document = editorFactory.createDocument(result.getContent());
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
         Editor e =  editorFactory.createEditor(document, project, virtualFile, true, EditorKind.PREVIEW);
@@ -480,9 +488,9 @@ public class SearchResultsTreeView implements Disposable {
         isDisposed = true;
     }
 
-    private void onSearchSuccess(List<SearchResult> r) {
+    private void onSearchSuccess(SourcegraphClient.Search search) {
         loadingLabel.setIcon(null);
-        handleSearch(r);
+        handleSearch(search);
     }
 
     private void onSearchError(ApolloException ex) {
@@ -549,7 +557,6 @@ public class SearchResultsTreeView implements Disposable {
             }
         }
     }
-
 }
 
 

@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import type.SearchPatternType;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -41,29 +40,30 @@ public class SourcegraphClient {
         }
     }
 
-    public void literalSearchAsync(String query, boolean caseSensitive, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+    public void literalSearchAsync(String query, boolean caseSensitive, Consumer<Search> onSuccess, Consumer<ApolloException> onError) {
         if (caseSensitive && !query.contains("case:yes")) {
             query += " case:yes";
         }
         searchAsync(query, SearchPatternType.LITERAL, onSuccess, onError);
     }
-    public void regexSearchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+    public void regexSearchAsync(String query, Consumer<Search> onSuccess, Consumer<ApolloException> onError) {
         searchAsync(query, SearchPatternType.REGEXP, onSuccess, onError);
     }
-    public void structuralSearchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+    public void structuralSearchAsync(String query, Consumer<Search> onSuccess, Consumer<ApolloException> onError) {
         searchAsync(query, SearchPatternType.STRUCTURAL, onSuccess, onError);
     }
 
-    public void searchAsync(String query, SearchPatternType patternType, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+    public void searchAsync(String query, SearchPatternType patternType, Consumer<Search> onSuccess, Consumer<ApolloException> onError) {
         apolloClient.query(new SearchQuery(query, patternType)).enqueue(new ApolloCall.Callback<>() {
             @Override
             public void onResponse(@NotNull Response<SearchQuery.Data> response) {
                 List<SearchResult> results = new ArrayList<>();
+                Search search = new Search(query, results);
                 for (SearchQuery.Result result : response.getData().search().results().results()) {
                     results.addAll(parse(result));
                 }
 
-                onSuccess.accept(results);
+                onSuccess.accept(search);
             }
 
             @Override
@@ -73,7 +73,7 @@ public class SourcegraphClient {
         });
     }
 
-    public void searchAsync(String query, Consumer<List<SearchResult>> onSuccess, Consumer<ApolloException> onError) {
+    public void searchAsync(String query, Consumer<Search> onSuccess, Consumer<ApolloException> onError) {
         searchAsync(query, SearchPatternType.LITERAL, onSuccess, onError);
     }
 
@@ -128,5 +128,23 @@ public class SourcegraphClient {
             return new OffsetAndLength(offset, length);
         }
         return new OffsetAndLength(0, 0);
+    }
+
+    public static class Search {
+        private String query;
+        private List<SearchResult> results;
+
+        public Search(String query, List<SearchResult> results) {
+            this.query = query;
+            this.results = results;
+        }
+
+        public String getQuery() {
+            return query;
+        }
+
+        public List<SearchResult> getResults() {
+            return results;
+        }
     }
 }
