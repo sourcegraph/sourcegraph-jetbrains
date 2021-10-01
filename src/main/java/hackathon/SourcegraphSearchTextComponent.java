@@ -28,6 +28,7 @@ import com.intellij.util.ArrayUtil;
 import com.intellij.util.ui.JBInsets;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -39,10 +40,8 @@ import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Stack;
 
 import static com.intellij.find.SearchTextArea.JUST_CLEARED_KEY;
 import static com.intellij.find.SearchTextArea.NEW_LINE_KEYSTROKE;
@@ -103,8 +102,7 @@ public class SourcegraphSearchTextComponent extends JPanel implements PropertyCh
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent e) {
-            JBList<String> historyList = new JBList<>();
-            showCompletionPopup(SourcegraphSearchTextComponent.this, historyList, null, null);
+            showCompletionPopup(SourcegraphSearchTextComponent.this, new JBList<>(ArrayUtil.reverseArray(queryHistory.toArray())), null, null);
         }
     }
 

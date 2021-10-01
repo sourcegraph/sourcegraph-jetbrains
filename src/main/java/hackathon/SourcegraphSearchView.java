@@ -342,6 +342,7 @@ public class SourcegraphSearchView implements Disposable {
         String query = search.getQuery();
         List<SearchResult> results = search.getResults();
         queryHistory.push(query);
+        System.out.println("pushed");
 
         mostRecentSearch = results;
         clearResults();
