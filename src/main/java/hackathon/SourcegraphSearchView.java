@@ -299,7 +299,7 @@ public class SourcegraphSearchView implements Disposable {
         AppUIExecutor.onUiThread().execute(() -> {
             titlePanel.remove(errorLabel);
             errorLabel.setVisible(false);
-//            titlePanel.revalidate();
+            titlePanel.revalidate();
 //            titlePanel
             loadingLabel.setIcon(AnimatedIcon.Default.INSTANCE);
 
@@ -342,7 +342,6 @@ public class SourcegraphSearchView implements Disposable {
         String query = search.getQuery();
         List<SearchResult> results = search.getResults();
         queryHistory.push(query);
-        System.out.println("pushed");
 
         mostRecentSearch = results;
         clearResults();
@@ -498,6 +497,7 @@ public class SourcegraphSearchView implements Disposable {
         System.out.println(ex);
         loadingLabel.setIcon(null);
         titlePanel.add(errorLabel);
+        errorLabel.setVisible(true);
     }
 
     private final class ToggleAction extends DumbAwareToggleAction {
