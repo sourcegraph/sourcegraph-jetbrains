@@ -189,7 +189,7 @@ public class SourcegraphSearchView implements Disposable {
         titlePanel.add(matchCountLabel);
 
         JPanel buttonPanel = new JPanel(new BorderLayout());
-        ComboBox<SourcegraphLocation> comboBox = new ComboBox<>(new SourcegraphLocation[]{new SourcegraphLocation("sourcegraph.com", "https://sourcegraph.com"), new SourcegraphLocation("k8s-dogfood", "https://k8s.sgdev.org", "18f0cb181240f2e4657e71642af6d7e0de1015ce")});
+        ComboBox<SourcegraphLocation> comboBox = new ComboBox<>(new SourcegraphLocation[]{new SourcegraphLocation("sourcegraph.com", "https://sourcegraph.com")});
         buttonPanel.add(comboBox, BorderLayout.EAST);
         buttonPanel.setBorder(new CompoundBorder(JBUI.Borders.customLine(JBUI.CurrentTheme.BigPopup.searchFieldBorderColor(), 0, 0, 0, 0),
                 JBUI.Borders.empty(1, 0)));
