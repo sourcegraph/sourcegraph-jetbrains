@@ -90,9 +90,8 @@ public class Util {
         };
 
         for (Path path : candidatePaths) {
-            File file = path.toFile();
             try {
-                return readPropsPath(file);
+                return readPropsFile(path.toFile());
             } catch (IOException e) {
                 // no-op
             }
@@ -101,7 +100,7 @@ public class Util {
         return new Properties();
     }
 
-    private static Properties readPropsPath(File file) throws IOException {
+    private static Properties readPropsFile(File file) throws IOException {
         Properties props = new Properties();
 
         try (InputStream input = new FileInputStream(file)) {
