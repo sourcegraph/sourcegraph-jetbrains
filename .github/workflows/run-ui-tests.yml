@@ -8,7 +8,10 @@
 # Workflow is triggered manually.
 
 name: Run UI Tests
-on: workflow_dispatch
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   testUI:
