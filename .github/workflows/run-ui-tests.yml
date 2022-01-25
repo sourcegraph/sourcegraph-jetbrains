@@ -57,4 +57,4 @@ jobs:
 
       # Run tests
       - name: Tests
-        run: ./gradlew test
+        run: ./gradlew test --debug
