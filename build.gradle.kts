@@ -22,17 +22,13 @@ intellij {
     type.set(properties("platformType"))
 
     // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
-    // plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
 }
 
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.7.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
-
-//test {
-//    useJUnitPlatform()
-//}
 
 //tasks {
 //    // Set the JVM compatibility versions
