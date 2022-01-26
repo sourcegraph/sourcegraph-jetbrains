@@ -30,21 +30,21 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
-//tasks {
-//    // Set the JVM compatibility versions
-//    properties("javaVersion").let {
-//        withType<JavaCompile> {
-//            sourceCompatibility = it
-//            targetCompatibility = it
-//        }
-//        withType<KotlinCompile> {
-//            kotlinOptions.jvmTarget = it
-//        }
-//    }
-//
-//    wrapper {
-//        gradleVersion = properties("gradleVersion")
-//    }
+tasks {
+    // Set the JVM compatibility versions
+    properties("javaVersion").let {
+        withType<JavaCompile> {
+            sourceCompatibility = it
+            targetCompatibility = it
+        }
+        withType<KotlinCompile> {
+            kotlinOptions.jvmTarget = it
+        }
+    }
+
+    wrapper {
+        gradleVersion = properties("gradleVersion")
+    }
 
 //    patchPluginXml {
 //        version.set(properties("pluginVersion"))
@@ -95,4 +95,4 @@ dependencies {
 //        // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
 //        channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
 //    }
-//}
+}
