@@ -9,11 +9,10 @@
 
 name: Run UI Tests
 on:
-  push:
-  pull_request:
-  workflow_dispatch:
+  workflow_dispatch
 
 jobs:
+
   testUI:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -31,6 +30,7 @@ jobs:
             runIde: ./gradlew runIdeForUiTests &
 
     steps:
+
       # Check out current repository
       - name: Fetch Sources
         uses: actions/checkout@v2.4.0
@@ -48,13 +48,13 @@ jobs:
         run: ${{ matrix.runIde }}
 
       # Wait for IDEA to be started
-      # - name: Health Check
-      #   uses: jtalk/url-health-check-action@v2
-      #   with:
-      #     url: http://127.0.0.1:8082
-      #     max-attempts: 15
-      #     retry-delay: 30s
+      - name: Health Check
+        uses: jtalk/url-health-check-action@v2
+        with:
+          url: http://127.0.0.1:8082
+          max-attempts: 15
+          retry-delay: 30s
 
       # Run tests
       - name: Tests
-        run: ./gradlew test --debug
+        run: ./gradlew test
