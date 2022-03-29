@@ -10,6 +10,7 @@
   <extensions defaultExtensionNs="com.intellij">
     <projectService serviceImplementation="Config"/>
     <notificationGroup id="Sourcegraph" displayType="BALLOON"/>
+    <notificationGroup id="Sourcegraph NPS" displayType="STICKY_BALLOON"/>
   </extensions>
 
   <actions>
