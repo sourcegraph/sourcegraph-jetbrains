@@ -1,0 +1,25 @@
+<html>
+<head><title>Sourcegraph</title></head>
+<body>
+  <img src="https://www.gravatar.com/avatar/046db2877d2f9342de37d0d59c5df4a9?s=200">
+  <div id="main"></div>
+  <script type="module">
+    async function exec(command) {
+      return JSON.parse(await window.__sgbridge(command));
+    }
+
+    window.__sginit = async () => {
+      const theme = await exec('theme')
+      main.innerHTML = `<pre style="color:${theme.color};font-size:${theme.fontSize}px;font-family:"${theme.font}", sans-serif;">${JSON.stringify(theme, null, 2)}</pre>${Math.random()}`
+    }
+
+    main.innerHTML=Math.random();
+
+   /* window.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      exec(`popup:${event.clientX}:${event.clientY}`);
+    });*/
+  </script>
+</body>
+</html>

@@ -12,13 +12,14 @@
     <projectService serviceImplementation="Config"/>
     <notificationGroup id="Sourcegraph" displayType="BALLOON"/>
     <projectService id="SourcegraphWindowService" serviceImplementation="com.sourcegraph.SourcegraphWindowService"/>
+    <searchEverywhereContributor implementation="com.sourcegraph.SourcegraphSearchEverywhereContributor$Factory"/>
     <toolWindow id="Sourcegraph" anchor="right" factoryClass="com.sourcegraph.WindowFactory" icon="/icons/icon.png" />
   </extensions>
 
   <actions>
-    <action id="sourcegraph.open" class="Open" text="Open File" description="Open selection in Sourcegraph">
-      <keyboard-shortcut first-keystroke="alt A" keymap="$default"/>
-    </action>
+<!--    <action id="sourcegraph.open" class="Open" text="Open File" description="Open selection in Sourcegraph">-->
+<!--      <keyboard-shortcut first-keystroke="alt A" keymap="$default"/>-->
+<!--    </action>-->
     <action id="sourcegraph.search" class="Search" text="Search Selection" description="Search selection on Sourcegraph">
       <keyboard-shortcut first-keystroke="alt s" keymap="$default"/>
     </action>
@@ -31,7 +32,7 @@
     <group id="SourcegraphEditor" icon="/icons/icon.png" popup="true" text="Sourcegraph">
       <reference ref="sourcegraph.search"/>
       <reference ref="sourcegraph.searchRepository"/>
-      <reference ref="sourcegraph.open"/>
+<!--      <reference ref="sourcegraph.open"/>-->
       <reference ref="sourcegraph.copy"/>
       <add-to-group anchor="last" group-id="EditorPopupMenu"/>
     </group>
@@ -40,6 +41,9 @@
       <add-to-group group-id="Vcs.Log.ContextMenu" anchor="last"/>
       <add-to-group group-id="VcsHistoryActionsGroup.Toolbar" anchor="last"/>
       <add-to-group group-id="VcsSelectionHistoryDialog.Popup" anchor="last"/>
+    </action>
+    <action id="OpenSourcegraphSearchBarAction" class="com.sourcegraph.OpenSourcegraphSearchBarAction" text="Search in Sourcegraph">
+      <keyboard-shortcut first-keystroke="alt A" keymap="$default"/>
     </action>
   </actions>
 
