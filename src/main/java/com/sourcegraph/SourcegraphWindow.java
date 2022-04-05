@@ -27,8 +27,13 @@ public class SourcegraphWindow {
     SourcegraphWindow(Project project) {
         this.project = project;
 
-        this.webView = new JBCefBrowser();
-        this.webView.loadURL("file://C:\\Users\\hello\\IdeaProjects\\sourcegraph-jetbrains\\src\\main\\resources\\html\\index.html");
+        this.webView = JBCefBrowser.createBuilder()
+                .setUrl("file://C:\\Users\\hello\\IdeaProjects\\sourcegraph-jetbrains\\src\\main\\resources\\html\\index.html")
+                .setOffScreenRendering(true)
+                .createBrowser();
+
+
+//        this.webView.loadURL(");
 
 
         String backgroundColor = "#"+Integer.toHexString(UIUtil.getPanelBackground().getRGB()).substring(2);
@@ -43,8 +48,6 @@ public class SourcegraphWindow {
                 }
             }
         }
-
-
 
         Disposer.register(project, this.webView);
 
@@ -85,6 +88,10 @@ public class SourcegraphWindow {
                 return null; // can respond back to JS with JBCefJSQuery.Response
             }
         });
+
+        this.webView.createImmediately();
+        SourcegraphBridgeThread thread = new SourcegraphBridgeThread(this.webView, bridge);
+        thread.start();
     }
 
     public void setToolWindow(ToolWindow toolWindow) {
@@ -94,4 +101,6 @@ public class SourcegraphWindow {
     public JComponent getComponent() {
         return this.webView.getComponent();
     }
+
+    public JBCefBrowser getBrowser() { return this.webView; }
 }

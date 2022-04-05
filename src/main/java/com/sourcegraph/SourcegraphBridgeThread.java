@@ -14,6 +14,8 @@ public class SourcegraphBridgeThread extends Thread{
     }
 
     public void run() {
+        System.out.println(this.webView.getCefBrowser().getFrameNames());
+        System.out.println(this.webView.getCefBrowser().isLoading());
         // Wait for the website to load maybe?
         try {
             Thread.sleep(5000);

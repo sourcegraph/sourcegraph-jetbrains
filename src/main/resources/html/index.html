@@ -1,8 +1,15 @@
 <html>
 <head><title>Sourcegraph</title></head>
 <body>
-  <img src="https://www.gravatar.com/avatar/046db2877d2f9342de37d0d59c5df4a9?s=200">
-  <div id="main"></div>
+  <div id="main" style="display: none">
+    <p>
+      <input type="text" value="" autofocus="true"><input type="button">
+    </p>
+    <ol>
+      <li><a href="">Result 1</a></li>
+      <li><a href="">Result 2</a></li>
+      </ol>
+  </div>
   <script type="module">
     async function exec(command) {
       return JSON.parse(await window.__sgbridge(command));
@@ -10,10 +17,12 @@
 
     window.__sginit = async () => {
       const theme = await exec('theme')
-      main.innerHTML = `<pre style="color:${theme.color};font-size:${theme.fontSize}px;font-family:"${theme.font}", sans-serif;">${JSON.stringify(theme, null, 2)}</pre>${Math.random()}`
+      main.style.color = theme.color;
+      main.style.fontSize = `${theme.fontSize}px`;
+      main.style.fontFamily = `"${theme.font}", sans-serif`;
+      // main.innerHTML = `<pre>${JSON.stringify(theme, null, 2)}</pre>`
+      main.style.display = 'block';
     }
-
-    main.innerHTML=Math.random();
 
    /* window.addEventListener('contextmenu', (e) => {
       e.preventDefault();
