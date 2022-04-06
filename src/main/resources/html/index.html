@@ -1,5 +1,9 @@
 <html>
-<head><title>Sourcegraph</title></head>
+<head>
+  <title>Sourcegraph</title>
+  <script src="https://unpkg.com/tabbable/dist/index.umd.js"></script>
+  <script src="https://unpkg.com/focus-trap/dist/focus-trap.umd.js"></script>
+</head>
 <body>
   <div id="main" style="display: none">
     <p>
@@ -11,6 +15,8 @@
       </ol>
   </div>
   <script type="module">
+
+
     async function exec(command) {
       return JSON.parse(await window.__sgbridge(command));
     }
@@ -22,6 +28,17 @@
       main.style.fontFamily = `"${theme.font}", sans-serif`;
       // main.innerHTML = `<pre>${JSON.stringify(theme, null, 2)}</pre>`
       main.style.display = 'block';
+
+      const trap = focusTrap.createFocusTrap(document.getElementById('main'), {
+        escapeDeactivates: false,
+        clickOutsideDeactivates: false,
+        allowOutsideClick: false,
+      });
+      trap.activate();
+    }
+
+    window.__sgfocus = () => {
+      document.querySelector('#main input').focus();
     }
 
    /* window.addEventListener('contextmenu', (e) => {

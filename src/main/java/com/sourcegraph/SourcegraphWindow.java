@@ -15,6 +15,7 @@ import javax.swing.*;
 import com.intellij.ui.jcef.JBCefJSQuery;
 import com.intellij.util.ui.UIUtil;
 import net.minidev.json.JSONObject;
+import org.cef.browser.CefBrowser;
 
 import static java.lang.Integer.parseInt;
 
@@ -31,6 +32,13 @@ public class SourcegraphWindow {
                 .setUrl("file://C:\\Users\\hello\\IdeaProjects\\sourcegraph-jetbrains\\src\\main\\resources\\html\\index.html")
                 .setOffScreenRendering(true)
                 .createBrowser();
+
+
+//        CefBrowser myDevTools = this.webView.getCefBrowser().getDevTools();
+//        JBCefBrowser myDevToolsBrowser = new JBCefBrowser(myDevTools,
+//                this.webView.getJBCefClient());
+//
+//        myDevToolsBrowser.openDevtools();
 
 
 //        this.webView.loadURL(");
