@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 public class Search extends SearchActionBase {
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
+        super.actionPerformed(e);
         super.actionPerformedMode(e, "search");
     }
 }

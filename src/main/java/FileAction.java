@@ -1,4 +1,3 @@
-import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.editor.*;
@@ -6,17 +5,20 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-public abstract class FileAction extends AnAction {
+public abstract class FileAction extends SourceGraphAction {
 
     abstract void handleFileUri(String uri);
 
     @Override
-    public void actionPerformed(AnActionEvent e) {
+    public void actionPerformed(@NotNull AnActionEvent e) {
+        super.actionPerformed(e);
+
         // Get project, editor, document, file, and position information.
         final Project project = e.getProject();
         if (project == null) {
@@ -48,7 +50,7 @@ public abstract class FileAction extends AnAction {
         VisualPosition selectionEndPosition = sel.getSelectionEndPosition();
         LogicalPosition start = selectionStartPosition != null ? editor.visualToLogicalPosition(selectionStartPosition) : null;
         LogicalPosition end = selectionEndPosition != null ? editor.visualToLogicalPosition(selectionEndPosition) : null;
-        uri = Util.sourcegraphURL(project)+"-/editor"
+        uri = Util.sourcegraphURL(project) + "-/editor"
                 + "?remote_url=" + URLEncoder.encode(repoInfo.remoteURL, StandardCharsets.UTF_8)
                 + "&branch=" + URLEncoder.encode(repoInfo.branch, StandardCharsets.UTF_8)
                 + "&file=" + URLEncoder.encode(repoInfo.fileRel, StandardCharsets.UTF_8)
