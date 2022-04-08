@@ -311,6 +311,7 @@ public class SourcegraphSearchView implements Disposable {
                 .createPopup();
 
         this.window.getBrowser().getCefBrowser().setFocus(true);
+        this.window.getBrowser().getCefBrowser().executeJavaScript("window.__sginit();", "", 0);
         this.window.getBrowser().getCefBrowser().executeJavaScript("window.__sgfocus();", "", 0);
 
         this.window.getBrowser().openDevtools();

@@ -2,6 +2,8 @@ package com.sourcegraph;
 
 import com.intellij.ide.actions.CopyAction;
 import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.actionSystem.ex.AnActionListener;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
@@ -16,6 +18,9 @@ import com.intellij.ui.jcef.JBCefJSQuery;
 import com.intellij.util.ui.UIUtil;
 import net.minidev.json.JSONObject;
 import org.cef.browser.CefBrowser;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import static java.lang.Integer.parseInt;
 
@@ -69,7 +74,7 @@ public class SourcegraphWindow {
                 // System.out.println( UIUtil.getLabelFont().toString());
 
                 JSONObject theme = new JSONObject();
-                theme.put("backgroundColor", backgroundColor);
+                theme.put("backgroundColor", "#"+Integer.toHexString(UIUtil.getPanelBackground().getRGB()).substring(2));
                 theme.put("font", UIUtil.getLabelFont().getFontName());
                 theme.put("fontSize", UIUtil.getLabelFont().getSize());
                 theme.put("color", "#"+Integer.toHexString(UIUtil.getLabelForeground().getRGB()).substring(2));
@@ -96,6 +101,18 @@ public class SourcegraphWindow {
                 return null; // can respond back to JS with JBCefJSQuery.Response
             }
         });
+
+        UIManager.addPropertyChangeListener( e -> {
+            if(e.getPropertyName().equals("lookAndFeel")) {
+                System.out.println("look and feel change ya'know");
+                System.out.println(UIManager.getLookAndFeelDefaults());
+                System.out.println( "#"+Integer.toHexString(UIUtil.getPanelBackground().getRGB()).substring(2));
+                String bgc = "#"+Integer.toHexString(UIUtil.getPanelBackground().getRGB()).substring(2);
+                this.webView.setPageBackgroundColor(bgc);
+                this.webView.getCefBrowser().executeJavaScript("window.__sginit();", "", 0);
+            }
+        } );
+
 
         this.webView.createImmediately();
         SourcegraphBridgeThread thread = new SourcegraphBridgeThread(this.webView, bridge);
