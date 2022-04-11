@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.ex.AnActionListener;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.ClassLoaderUtil;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -17,6 +18,7 @@ import javax.swing.*;
 import com.intellij.ui.jcef.JBCefJSQuery;
 import com.intellij.util.ui.UIUtil;
 import net.minidev.json.JSONObject;
+import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 
 import java.beans.PropertyChangeEvent;
@@ -33,11 +35,20 @@ public class SourcegraphWindow {
     SourcegraphWindow(Project project) {
         this.project = project;
 
+        System.out.println(getClass().getResource("/html/index.html"));
+
         this.webView = JBCefBrowser.createBuilder()
-                .setUrl("file://C:\\Users\\hello\\IdeaProjects\\sourcegraph-jetbrains\\src\\main\\resources\\html\\index.html")
+                .setUrl("http://sourcegraph/index.html")
                 .setOffScreenRendering(true)
                 .createBrowser();
 
+        CefApp
+                .getInstance()
+                .registerSchemeHandlerFactory(
+                        "http",
+                        "sourcegraph",
+                        new SourcegraphSchemeHandlerFactory()
+                );
 
 //        CefBrowser myDevTools = this.webView.getCefBrowser().getDevTools();
 //        JBCefBrowser myDevToolsBrowser = new JBCefBrowser(myDevTools,
@@ -57,7 +68,7 @@ public class SourcegraphWindow {
             Shortcut[] shortcuts = ActionManager.getInstance().getAction(action).getShortcutSet().getShortcuts();
             for (Shortcut shortcut : shortcuts) {
                 if(shortcut instanceof KeyboardShortcut){
-                    System.out.println("[" + action + "]" + shortcut.toString());
+//                    System.out.println("[" + action + "]" + shortcut.toString());
                 }
             }
         }
