@@ -1,5 +1,6 @@
 package com.sourcegraph;
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -9,6 +10,8 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.OnePixelSplitter;
 import com.intellij.ui.PopupBorder;
@@ -67,8 +70,17 @@ public class SourcegraphSearchView implements Disposable {
 
         ActionListener openTSInEditorAction = actionEvent -> FileEditorManager.getInstance(project).openTextEditor(
                 new OpenFileDescriptor(project, virtualTSFile, 0), true);
-        ActionListener openJavaInEditorAction = actionEvent -> FileEditorManager.getInstance(project).openTextEditor(
-                new OpenFileDescriptor(project, virtualJavaFile, 0), true);
+        ActionListener openJavaInEditorAction = actionEvent -> {
+            /* Open file in editor */
+            FileEditorManager.getInstance(project).openTextEditor(
+                    new OpenFileDescriptor(project, virtualJavaFile, 0), true);
+
+            /* Suppress code issues */
+            PsiFile file = PsiManager.getInstance(project).findFile(virtualJavaFile);
+            if (file != null) {
+                DaemonCodeAnalyzer.getInstance(project).setHighlightingEnabled(file, false);
+            }
+        };
 
         editorFactory = EditorFactory.getInstance();
         Editor editor1 = createEditor(virtualTSFile, true);
