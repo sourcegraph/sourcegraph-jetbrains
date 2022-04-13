@@ -8,7 +8,7 @@
 .idea/
 
 #intellij project
-.iml
+*.iml
 
 # Build output & caches for IntelliJ plugin development
 build/
