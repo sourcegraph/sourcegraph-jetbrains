@@ -18,15 +18,15 @@ import com.sourcegraph.project.CommitViewUriBuilder;
 import com.sourcegraph.project.RepoInfo;
 import com.sourcegraph.project.RevisionContext;
 import com.sourcegraph.util.SourcegraphUtil;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
 import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.diagnostic.Logger;
 
 /**
  * Jetbrains IDE action to open a selected revision in Sourcegraph.
  */
 public class OpenRevisionAction extends AnAction implements DumbAware {
-  private final Logger logger = LogManager.getLogger(this.getClass());
+  private final Logger logger = Logger.getInstance(this.getClass());
 
   private Optional<RevisionContext> getHistoryRevision(AnActionEvent e) {
     VcsFileRevision revision = e.getDataContext().getData(VcsDataKeys.VCS_FILE_REVISION);
