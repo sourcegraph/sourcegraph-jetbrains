@@ -1,3 +1,5 @@
+package com.sourcegraph.action;
+
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationInfo;
@@ -11,6 +13,11 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
+
+import com.sourcegraph.project.CommitViewUriBuilder;
+import com.sourcegraph.project.RepoInfo;
+import com.sourcegraph.project.RevisionContext;
+import com.sourcegraph.util.SourcegraphUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -61,10 +68,10 @@ public class OpenRevisionAction extends AnAction implements DumbAware {
     try {
       String productName = ApplicationInfo.getInstance().getVersionName();
       String productVersion = ApplicationInfo.getInstance().getFullVersion();
-      RepoInfo repoInfo = Util.repoInfo(context.getProject().getProjectFilePath(), context.getProject());
+      RepoInfo repoInfo = SourcegraphUtil.repoInfo(context.getProject().getProjectFilePath(), context.getProject());
 
       CommitViewUriBuilder builder = new CommitViewUriBuilder();
-      URI uri = builder.build(Util.sourcegraphURL(context.getProject()), context.getRevisionNumber(), repoInfo, productName, productVersion);
+      URI uri = builder.build(SourcegraphUtil.sourcegraphURL(context.getProject()), context.getRevisionNumber(), repoInfo, productName, productVersion);
 
       // Open the URL in the browser.
       Desktop.getDesktop().browse(uri);

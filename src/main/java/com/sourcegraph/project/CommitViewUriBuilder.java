@@ -1,4 +1,9 @@
+package com.sourcegraph.project;
+
 import com.google.common.base.Strings;
+import com.sourcegraph.project.RepoInfo;
+import com.sourcegraph.util.SourcegraphUtil;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -28,7 +33,7 @@ public class CommitViewUriBuilder {
       builder.append(String.format("/%s%s", remote.getHost(), path));
       builder.append(String.format("/-/commit/%s", revisionNumber));
       builder.append(String.format("?editor=%s", URLEncoder.encode("JetBrains", "UTF-8")));
-      builder.append(String.format("&version=%s", URLEncoder.encode(Util.VERSION, "UTF-8")));
+      builder.append(String.format("&version=%s", URLEncoder.encode(SourcegraphUtil.VERSION, "UTF-8")));
       builder.append(String.format("&utm_product_name=%s", URLEncoder.encode(productName, "UTF-8")));
       builder.append(String.format("&utm_product_version=%s", URLEncoder.encode(productVersion, "UTF-8")));
     } catch (UnsupportedEncodingException e) {

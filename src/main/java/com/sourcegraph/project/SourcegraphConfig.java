@@ -1,3 +1,5 @@
+package com.sourcegraph.project;
+
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
@@ -9,7 +11,8 @@ import org.jetbrains.annotations.Nullable;
 @State(
   name = "Config",
   storages = {@Storage("sourcegraph.xml")})
-class Config implements PersistentStateComponent<Config> {
+public
+class SourcegraphConfig implements PersistentStateComponent<SourcegraphConfig> {
 
     public String url;
 
@@ -31,18 +34,19 @@ class Config implements PersistentStateComponent<Config> {
 
     @Nullable
     @Override
-    public Config getState() {
+    public SourcegraphConfig getState() {
         return this;
     }
 
     @Override
-    public void loadState(@NotNull Config config) {
+    public void loadState(@NotNull SourcegraphConfig config) {
         this.url = config.url;
         this.defaultBranch = config.defaultBranch;
         this.remoteUrlReplacements = config.remoteUrlReplacements;
     }
 
-    @Nullable static Config getInstance(Project project) {
-        return ServiceManager.getService(project, Config.class);
+    @Nullable
+    public static SourcegraphConfig getInstance(Project project) {
+        return ServiceManager.getService(project, SourcegraphConfig.class);
     }
 }

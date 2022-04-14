@@ -45,11 +45,11 @@ You may also choose to configure it _per repository_ using a `.idea/sourcegraph.
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-    <component name="Config">
-        <option name="url" value="https://sourcegraph.example.com" />
-        <option name="defaultBranch" value="example-branch" />
-        <option name="remoteUrlReplacements" value="git.example.com, git-web.example.com" />
-    </component>
+  <component name="com.sourcegraph.project.SourcegraphConfig">
+    <option name="url" value="https://sourcegraph.example.com"/>
+    <option name="defaultBranch" value="example-branch"/>
+    <option name="remoteUrlReplacements" value="git.example.com, git-web.example.com"/>
+  </component>
 </project>
 ```
 
@@ -73,7 +73,7 @@ Please file an issue: https://github.com/sourcegraph/sourcegraph-jetbrains/issue
   2. `./gradlew buildPlugin` to build plugin artifact (`build/distributions/Sourcegraph.zip`)
 - To create `sourcegraph.jar`:
   1. Update `plugin.xml` (change version AND describe changes in change notes).
-  2. Update `Util.java` (change `VERSION` constant).
+  2. Update `com.sourcegraph.util.SourcegraphUtil.java` (change `VERSION` constant).
   3. Update `README.md` (copy changelog from plugin.xml).
   4. choose `Build` -> `Prepare Plugin Module 'sourcegraph' For Deployment`
   5. `git commit -m "all: release v<THE VERSION>"` and `git push` and `git tag v<THE VERSION>` and `git push --tags`
