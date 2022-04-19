@@ -1,3 +1,5 @@
+package com.sourcegraph.action;
+
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationInfo;
@@ -10,14 +12,12 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.sourcegraph.project.RepoInfo;
+import com.sourcegraph.util.SourcegraphUtil;
 
-import java.awt.*;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.List;
+
 
 public abstract class FileAction extends AnAction {
 
@@ -47,7 +47,7 @@ public abstract class FileAction extends AnAction {
         SelectionModel sel = editor.getSelectionModel();
 
         // Get repo information.
-        RepoInfo repoInfo = Util.repoInfo(currentFile.getPath(), project);
+        RepoInfo repoInfo = SourcegraphUtil.repoInfo(currentFile.getPath(), project);
         if (repoInfo.remoteURL == "") {
             return;
         }
@@ -60,12 +60,12 @@ public abstract class FileAction extends AnAction {
         try {
             LogicalPosition start = editor.visualToLogicalPosition(sel.getSelectionStartPosition());
             LogicalPosition end = editor.visualToLogicalPosition(sel.getSelectionEndPosition());
-            uri = Util.sourcegraphURL(project)+"-/editor"
+            uri = SourcegraphUtil.sourcegraphURL(project)+"-/editor"
                     + "?remote_url=" + URLEncoder.encode(repoInfo.remoteURL, "UTF-8")
                     + "&branch=" + URLEncoder.encode(repoInfo.branch, "UTF-8")
                     + "&file=" + URLEncoder.encode(repoInfo.fileRel, "UTF-8")
                     + "&editor=" + URLEncoder.encode("JetBrains", "UTF-8")
-                    + "&version=" + URLEncoder.encode(Util.VERSION, "UTF-8")
+                    + "&version=" + URLEncoder.encode(SourcegraphUtil.VERSION, "UTF-8")
                     + "&start_row=" + URLEncoder.encode(Integer.toString(start.line), "UTF-8")
                     + "&start_col=" + URLEncoder.encode(Integer.toString(start.column), "UTF-8")
                     + "&end_row=" + URLEncoder.encode(Integer.toString(end.line), "UTF-8")
