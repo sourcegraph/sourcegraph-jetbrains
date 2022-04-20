@@ -1,4 +1,13 @@
+package com.sourcegraph.project;
+
 import com.google.common.base.Strings;
+<<<<<<< HEAD:src/main/java/CommitViewUriBuilder.java
+=======
+import com.sourcegraph.project.RepoInfo;
+import com.sourcegraph.util.SourcegraphUtil;
+
+import java.io.UnsupportedEncodingException;
+>>>>>>> origin/master:src/main/java/com/sourcegraph/project/CommitViewUriBuilder.java
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +31,7 @@ public class CommitViewUriBuilder {
     URI remote = URI.create(remoteURL);
     String path = remote.getPath();
 
+<<<<<<< HEAD:src/main/java/CommitViewUriBuilder.java
       String url = sourcegraphBase +
               String.format("/%s%s", remote.getHost(), path) +
               String.format("/-/commit/%s", revisionNumber) +
@@ -29,6 +39,20 @@ public class CommitViewUriBuilder {
               String.format("&version=%s", URLEncoder.encode(Util.VERSION, StandardCharsets.UTF_8)) +
               String.format("&utm_product_name=%s", URLEncoder.encode(productName, StandardCharsets.UTF_8)) +
               String.format("&utm_product_version=%s", URLEncoder.encode(productVersion, StandardCharsets.UTF_8));
+=======
+    StringBuilder builder = new StringBuilder();
+    try {
+      builder.append(sourcegraphBase);
+      builder.append(String.format("/%s%s", remote.getHost(), path));
+      builder.append(String.format("/-/commit/%s", revisionNumber));
+      builder.append(String.format("?editor=%s", URLEncoder.encode("JetBrains", "UTF-8")));
+      builder.append(String.format("&version=%s", URLEncoder.encode(SourcegraphUtil.VERSION, "UTF-8")));
+      builder.append(String.format("&utm_product_name=%s", URLEncoder.encode(productName, "UTF-8")));
+      builder.append(String.format("&utm_product_version=%s", URLEncoder.encode(productVersion, "UTF-8")));
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
+>>>>>>> origin/master:src/main/java/com/sourcegraph/project/CommitViewUriBuilder.java
 
     return URI.create(url);
   }
