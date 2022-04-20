@@ -7,7 +7,7 @@
 # User local IDEA configuration files
 .idea/
 
-#intellij project
+#IntelliJ project
 *.iml
 
 # Build output & caches for IntelliJ plugin development
