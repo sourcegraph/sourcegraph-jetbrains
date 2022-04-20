@@ -128,7 +128,7 @@ public class SourcegraphUtil {
             // Determine file path, relative to repository root.
             fileRel = fileName.substring(repoRoot.length()+1);
             remoteURL = configuredGitRemoteURL(repoRoot);
-            branch = Util.setDefaultBranch(project)!=null ? SourcegraphUtil.setDefaultBranch(project) : gitBranch(repoRoot);
+            branch = SourcegraphUtil.setDefaultBranch(project)!=null ? SourcegraphUtil.setDefaultBranch(project) : gitBranch(repoRoot);
 
             // If on a branch that does not exist on the remote and no defaultBranch is configured
             // use "master" instead.
