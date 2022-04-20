@@ -9,11 +9,5 @@ import org.jetbrains.annotations.NotNull;
 class WindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-//        SourcegraphWindowService service = ServiceManager.getService(project, SourcegraphWindowService.class);
-//        SourcegraphWindow window = service.window;
-//
-//        window.setToolWindow(toolWindow);
-//
-//        toolWindow.getComponent().getParent().add(window.getComponent());
     }
 }

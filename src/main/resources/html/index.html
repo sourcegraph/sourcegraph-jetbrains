@@ -1,49 +1,14 @@
 <html>
 <head>
   <title>Sourcegraph</title>
-  <script src="https://unpkg.com/tabbable/dist/index.umd.js"></script>
-  <script src="https://unpkg.com/focus-trap/dist/focus-trap.umd.js"></script>
 </head>
 <body>
-  <div id="main" style="display: none">
-    <p>
-      <input type="text" value="" autofocus="true"><input type="button">
-    </p>
-    <ol>
-      <li><a href="">Result 1</a></li>
-      <li><a href="">Result 2</a></li>
-      </ol>
-  </div>
+  <input type="text" value="" autofocus="true">
+  <pre id="pre"></pre>
   <script type="module">
-    async function exec(command) {
-      return JSON.parse(await window.__sgbridge(command));
-    }
-
-    window.__sginit = async () => {
-      const theme = await exec('theme')
-      main.style.color = theme.color;
-      main.style.fontSize = `${theme.fontSize}px`;
-      main.style.fontFamily = `"${theme.font}", sans-serif`;
-      // main.innerHTML = `<pre>${JSON.stringify(theme, null, 2)}</pre>`
-      main.style.display = 'block';
-
-      const trap = focusTrap.createFocusTrap(document.getElementById('main'), {
-        escapeDeactivates: false,
-        clickOutsideDeactivates: false,
-        allowOutsideClick: false,
-      });
-      trap.activate();
-    }
-
-    window.__sgfocus = () => {
-      document.querySelector('#main input').focus();
-    }
-
-   /* window.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      exec(`popup:${event.clientX}:${event.clientY}`);
-    });*/
+    document.addEventListener('keydown', e => {
+      pre.innerText = `key: ${e.key}, code: ${e.code}, keyCode: ${e.keyCode}, altKey: ${e.altKey}, ctrlKey: ${e.ctrlKey}, shiftKey: ${e.shiftKey}, metaKey: ${e.metaKey}\n${pre.innerText}`;
+    });
   </script>
 </body>
 </html>

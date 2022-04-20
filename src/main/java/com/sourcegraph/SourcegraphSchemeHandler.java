@@ -1,6 +1,5 @@
 package com.sourcegraph;
 
-
 import org.cef.callback.CefCallback;
 import org.cef.handler.CefResourceHandlerAdapter;
 import org.cef.misc.IntRef;
@@ -74,8 +73,6 @@ public class SourcegraphSchemeHandler extends CefResourceHandlerAdapter {
     }
 
     private boolean loadContent(String resName) {
-        System.out.println(resName);
-        System.out.println("/html/"+resName);
         InputStream inStream = getClass().getResourceAsStream("/html/"+resName);
         System.out.println(inStream);
         if (inStream != null) {
