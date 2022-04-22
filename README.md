@@ -1,4 +1,3 @@
-
 **⚠️ Development of the JetBrains plugin has [moved into the `sourcegraph/sourcegraph` monorepo](https://github.com/sourcegraph/sourcegraph/tree/main/client/jetbrains).**
 
 <br>
