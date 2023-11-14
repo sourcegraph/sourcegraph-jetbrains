@@ -5,7 +5,7 @@
 <br>
 <br>
 
-**⚠️ Development of the JetBrains plugin has [moved into the `sourcegraph/sourcegraph` monorepo](https://github.com/sourcegraph/sourcegraph/tree/main/client/jetbrains).**
+**⚠️ Development of the JetBrains plugin has [moved to `sourcegraph/jetbrains`](https://github.com/sourcegraph/jetbrains).**
 
 <br>
 <br>
